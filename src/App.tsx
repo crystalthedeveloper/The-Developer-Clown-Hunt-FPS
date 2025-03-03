@@ -4,7 +4,7 @@
 
 import { useRef, useEffect, useState, Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
-import { Physics, Debug } from "@react-three/cannon";
+import { Physics } from "@react-three/cannon";
 import { Html, Environment, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { Ground } from "./components/Ground";
