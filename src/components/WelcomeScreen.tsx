@@ -35,6 +35,14 @@ const WelcomeScreen: React.FC<{ onStart: () => void; userName: string | null }> 
           <button className="play-button" onClick={handleStart}>
             🎯 PLAY
           </button>
+
+          {/* 🔗 Corporate Site Button - Opens in New Tab */}
+          <button
+            className="corporate-button"
+            onClick={() => window.open("https://www.crystalthedeveloper.ca/", "_blank")}
+          >
+            🏢 Corporate Site
+          </button>
         </div>
 
         {/* Control Info (Toggles Visibility) */}
