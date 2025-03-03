@@ -1,0 +1,108 @@
+.welcome-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('/game-screenshot.jpg') center/cover no-repeat;
+    /* Use game screenshot */
+    color: #ccc;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: left;
+    font-family: "Arial", sans-serif;
+    cursor: default;
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+/* 🕹️ Add slight blur effect */
+.welcome-screen::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    backdrop-filter: blur(8px);
+    /* 👈 Increase blur effect */
+    z-index: -1;
+}
+
+
+/* Make sure it fades in */
+.welcome-screen.fade-in {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* 🏆 3D Glass Box for the UI */
+.welcome-box {
+    background: rgba(20, 20, 20, 0.5);
+    /* 👈 Transparent dark glass effect */
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(15px);
+    /* 👈 Glassmorphism effect */
+    -webkit-backdrop-filter: blur(15px);
+}
+
+.welcome-box-header {
+    margin-bottom: 0px;
+}
+
+/* Buttons Side-by-Side */
+.button-container {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+/* 🎮 Controls & 🎯 Play Buttons */
+.controls-button,
+.play-button {
+    background: rgba(30, 30, 30, 0.7);
+    border: 1px solid #555;
+    padding: 12px 30px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 8px;
+    color: #ddd;
+    transition: 0.3s;
+    box-shadow: 0 5px 15px rgba(255, 255, 255, 0.1);
+}
+
+.controls-button:hover,
+.play-button:hover {
+    background: rgba(50, 50, 50, 0.9);
+    transform: scale(1.05);
+}
+
+.controls-button:active,
+.play-button:active {
+    transform: scale(0.95);
+}
+
+/* 🎮 Control Info Box */
+.controls {
+    padding: 15px;
+    border-radius: 10px;
+    width: 320px;
+    text-align: left;
+    color: #fff;
+    font-size: 1rem;
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.controls.fade-in {
+    opacity: 1;
+    transform: scale(1);
+}

@@ -1,8 +1,5 @@
-// App.tsx
-// This component manages the game state, rendering the 3D environment with physics, player controls, clowns, obstacles (BlackBoxes, MovableBlackBoxes), and logos to collect. 
-// It integrates game logic such as player movement, interactions, score, and the game over condition.
-
 import { useRef, useEffect, useState, Suspense } from "react";
+import WelcomeScreen from "./components/WelcomeScreen";
 import { Canvas } from "@react-three/fiber";
 import { Physics } from "@react-three/cannon";
 import { Html, Environment, useGLTF } from "@react-three/drei";
@@ -28,6 +25,7 @@ const TOTAL_LOGOS = 3;
 const TOTAL_CLOWNS = 8;
 const TOTAL_BLACKBOXES = 10;
 const TOTAL_DIEBOXES = 5;
+const TOTAL_MOVABLE_BLACKBOXES = 5;
 
 const PLAYER_START_POSITION: Position = [0, 1, 0];
 export const GROUND_SIZE = 50;
@@ -75,6 +73,9 @@ const generateUniquePositions = (
 function App() {
   const playerRef = useRef<PlayerRef | null>(null);
   const bulletsRef = useRef<THREE.Mesh[]>([]);
+  const [userName, setUserName] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [gameStarted, setGameStarted] = useState(false);
 
   const {
     increaseScore,
@@ -101,6 +102,20 @@ function App() {
   const { scene: logosModel } = useGLTF("/logos.glb");
   const logoChildrenCount = logosModel.children.length;
 
+  // Fetch the authenticated user from Supabase
+  useEffect(() => {
+    async function fetchUser() {
+      const user = await SupabaseAuth.getUser();
+      if (user) {
+        setUserName(user.user_metadata?.full_name || "Player");
+      } else {
+        setUserName("Player");
+      }
+      setLoading(false);
+    }
+    fetchUser();
+  }, []);
+
   const resetClownState = () => {
     (window as any).gameOverTriggered = false;
   };
@@ -118,58 +133,21 @@ function App() {
   const handleRestart = () => {
     resetGame();
     resetClownState();
-  
+
     const allPositions: Position[] = [PLAYER_START_POSITION];
-  
-    const newLogoPositions = generateUniquePositions(
-      TOTAL_LOGOS,
-      GROUND_SIZE,
-      allPositions,
-      3,
-      0.5,
-      8
-    );
-  
-    const newClownPositions = generateUniquePositions(
-      TOTAL_CLOWNS,
-      GROUND_SIZE,
-      allPositions,
-      3,
-      0.5,
-      8
-    );
-  
-    const newBlackBoxPositions = generateUniquePositions(
-      TOTAL_BLACKBOXES,
-      GROUND_SIZE,
-      allPositions,
-      3,
-      0.5,
-      8
-    );
-  
-    const newDieBoxPositions = generateUniquePositions(
-      TOTAL_DIEBOXES,
-      GROUND_SIZE,
-      allPositions,
-      3,
-      0.5,
-      8
-    );
-  
-    setLogoPositions(newLogoPositions);
+
+    setLogoPositions(generateUniquePositions(TOTAL_LOGOS, GROUND_SIZE, allPositions, 3, 0.5, 8));
     setClownData(
-      newClownPositions.map((pos, index) => ({
+      generateUniquePositions(TOTAL_CLOWNS, GROUND_SIZE, allPositions, 3, 0.5, 8).map((pos, index) => ({
         id: index + 1,
         position: pos,
         isAlive: true,
       }))
     );
-    setBlackBoxPositions(newBlackBoxPositions);
-    setDieBoxPositions(newDieBoxPositions);
+    setBlackBoxPositions(generateUniquePositions(TOTAL_BLACKBOXES, GROUND_SIZE, allPositions, 3, 0.5, 8));
+    setDieBoxPositions(generateUniquePositions(TOTAL_DIEBOXES, GROUND_SIZE, allPositions, 3, 0.5, 8));
     setCollectedLogos(0);
   };
-  
 
   const handleSaveGame = async () => {
     setSaving(true);
@@ -216,28 +194,27 @@ function App() {
 
   return (
     <>
-      <div className="crosshair" />
-      <Scoreboard />
+      {/* Show Welcome Screen Until Game Starts */}
+      {!gameStarted && !loading && <WelcomeScreen onStart={() => setGameStarted(true)} userName={userName} />}
+      
+      {gameStarted && (
+        <>
+          <div className="crosshair" />
+          <Scoreboard />
 
-      <Canvas
-        shadows
-        camera={{ position: [0, 10, 25], fov: 50 }}
-        style={{ height: "100%", width: "100%" }}
-      >
-        <Suspense fallback={<Html center>Loading...</Html>}>
-          <Environment preset="studio" background />
-          <Physics gravity={[0, -50, 0]}>
-            
-              <Player
-                ref={playerRef}
-                bulletsRef={bulletsRef}
-                onDie={() => setGameOver("lose")}
-              />
-              <Ground size={[GROUND_SIZE, GROUND_SIZE]} />
+          <Canvas
+            shadows
+            camera={{ position: [0, 10, 25], fov: 50 }}
+            style={{ height: "100%", width: "100%" }}
+          >
+            <Suspense fallback={<Html center>Loading...</Html>}>
+              <Environment preset="studio" background />
+              <Physics gravity={[0, -50, 0]}>
+                <Player ref={playerRef} bulletsRef={bulletsRef} onDie={() => setGameOver("lose")} />
+                <Ground size={[GROUND_SIZE, GROUND_SIZE]} />
 
-              {clownData.map(
-                (clown) =>
-                  clown.isAlive && (
+                {clownData.map((clown) =>
+                  clown.isAlive ? (
                     <Clown
                       key={clown.id}
                       id={clown.id}
@@ -247,46 +224,31 @@ function App() {
                       model={clownModel}
                       animations={clownAnimations}
                       onKill={(id) => {
-                        setClownData((prev) =>
-                          prev.map((c) =>
-                            c.id === id ? { ...c, isAlive: false } : c
-                          )
-                        );
+                        setClownData((prev) => prev.map((c) => (c.id === id ? { ...c, isAlive: false } : c)));
                         increaseKills();
                       }}
                       onCatch={() => setGameOver("lose")}
                     />
-                  )
-              )}
+                  ) : null
+                )}
 
-              {logoPositions.map((position, index) => (
-                <LogoItem
-                  key={index}
-                  playerRef={playerRef}
-                  position={position}
-                  model={logosModel}
-                  logoIndex={index % logoChildrenCount}
-                  onCollect={handleLogoCollect}
-                />
-              ))}
+                {logoPositions.map((position, index) => (
+                  <LogoItem key={index} playerRef={playerRef} position={position} model={logosModel} logoIndex={index % logoChildrenCount} onCollect={handleLogoCollect} />
+                ))}
+                
+                <BlackBoxes existingPositions={blackBoxPositions} />
+                <DieBoxes existingPositions={dieBoxPositions} onPlayerDie={() => setGameOver("lose")} />
 
-              <BlackBoxes existingPositions={blackBoxPositions} />
-              {/* Add 5 MovableBlackBoxes with different positions */}
-              {[...Array(5)].map((_, index) => (
-                <MovableBlackBox
-                  key={index}
-                  position={[Math.random() * 20 - 10, 1, Math.random() * 20 - 10]} // Random positions
-                  size={[1, 1, 1]}
-                />
-              ))}
+                {[...Array(TOTAL_MOVABLE_BLACKBOXES)].map((_, index) => (
+                  <MovableBlackBox key={index} position={[Math.random() * 20 - 10, 1, Math.random() * 20 - 10]} size={[1, 1, 1]} />
+                ))}
+              </Physics>
+            </Suspense>
+          </Canvas>
 
-              <DieBoxes existingPositions={dieBoxPositions} onPlayerDie={() => setGameOver("lose")} />
-            
-          </Physics>
-        </Suspense>
-      </Canvas>
-
-      <PlayerControls onShoot={() => playerRef.current?.shoot()} />
+          <PlayerControls onShoot={() => playerRef.current?.shoot()} />
+        </>
+      )}
     </>
   );
 }

@@ -3,12 +3,9 @@
 import { supabase } from "./supabaseClient";
 
 export const SupabaseAuth = {
-  /** ✅ User Login (Fixed `user` Extraction) */
+  /** ✅ User Login with Email */
   async signInWithEmail(email: string, password: string) {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       console.error("⚠️ Login failed:", error.message);
@@ -35,10 +32,14 @@ export const SupabaseAuth = {
       return null;
     }
 
-    return data.user;
+    // Extract user details with fallback
+    const user = data.user;
+    const fullName = user.user_metadata?.full_name || "Player";
+    
+    return { ...user, fullName };
   },
 
-  /** ✅ Get User Session (Token & Auth Info) */
+  /** ✅ Get Active Session (Token & Auth Info) */
   async getSession() {
     const { data, error } = await supabase.auth.getSession();
     if (error) {
@@ -46,6 +47,18 @@ export const SupabaseAuth = {
       return null;
     }
     return data.session; // ✅ Contains access_token, refresh_token, user data
+  },
+
+  /** ✅ Auto-Persist Session */
+  async getOrRefreshSession() {
+    let session = await this.getSession();
+
+    if (!session) {
+      console.log("🔄 No active session found, refreshing...");
+      session = await this.refreshSession();
+    }
+
+    return session;
   },
 
   /** ✅ Refresh Auth Session (if needed) */
