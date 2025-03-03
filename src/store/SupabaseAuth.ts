@@ -14,7 +14,7 @@ export const SupabaseAuth = {
       }
 
       console.log("✅ User logged in:", data?.user);
-      return data?.user ?? null; // ✅ Ensure `user` exists
+      return data?.user ?? null;
     } catch (err) {
       console.error("❌ Unexpected login error:", err);
       return null;
@@ -38,13 +38,23 @@ export const SupabaseAuth = {
   /** ✅ Fetch the Currently Logged-in User */
   async getUser() {
     try {
-      // 🔄 Ensure session is up-to-date before checking user
-      await supabase.auth.refreshSession();
+      console.log("🔄 Checking if user is authenticated...");
 
+      // ✅ Instead of refreshing the session, get the latest session info
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+      if (sessionError || !sessionData.session) {
+        console.warn("⚠️ No active session found.");
+        return null;
+      }
+
+      console.log("✅ Session found, checking user...");
+
+      // ✅ Now fetch the user
       const { data, error } = await supabase.auth.getUser();
 
       if (error || !data?.user) {
-        console.warn("⚠️ No user found or session expired.");
+        console.warn("⚠️ No user found, session might have expired.");
         return null;
       }
 
@@ -59,7 +69,7 @@ export const SupabaseAuth = {
     }
   },
 
-  /** ✅ Get Active Session (Token & Auth Info) */
+  /** ✅ Get Active Session */
   async getSession() {
     try {
       const { data, error } = await supabase.auth.getSession();
@@ -81,7 +91,7 @@ export const SupabaseAuth = {
       let session = await this.getSession();
 
       if (!session) {
-        console.log("🔄 No active session found, refreshing...");
+        console.log("🔄 No active session found, trying to re-authenticate...");
         session = await this.refreshSession();
       }
 
@@ -92,10 +102,10 @@ export const SupabaseAuth = {
     }
   },
 
-  /** ✅ Refresh Auth Session (if needed) */
+  /** ✅ Refresh Auth Session */
   async refreshSession() {
     try {
-      const { data, error } = await supabase.auth.refreshSession();
+      const { data, error } = await supabase.auth.getSession(); // 🔄 Use getSession() instead
       if (error || !data?.session) {
         console.warn("⚠️ Failed to refresh session.");
         return null;
