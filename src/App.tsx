@@ -1,3 +1,4 @@
+// App.tsx
 import { useRef, useEffect, useState, Suspense } from "react";
 import WelcomeScreen from "./components/WelcomeScreen";
 import { Canvas } from "@react-three/fiber";
