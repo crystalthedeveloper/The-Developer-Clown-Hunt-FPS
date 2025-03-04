@@ -69,3 +69,26 @@
 .menu-button:active {
     transform: scale(0.95);
 }
+
+.button-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 50px; /* Ensures space is reserved */
+  }
+  
+  .status-message,
+  .error-message {
+    font-size: 14px;
+    margin-top: 5px;
+    min-height: 20px; /* Keeps space reserved */
+  }
+  
+  .status-message {
+    color: #00c853; /* Green success message */
+  }
+  
+  .error-message {
+    color: #ff5252; /* Red error message */
+  }  

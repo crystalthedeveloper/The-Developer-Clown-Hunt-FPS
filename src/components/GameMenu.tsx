@@ -2,13 +2,13 @@
 // This component displays the game menu, showing the current game status (win/lose), 
 // the score, and options to save the game, restart, or visit the portfolio.
 
-// components/GameMenu.tsx
+import { useState } from "react";
 import { useGameStore } from "../store/store";
 import "../css/GameMenu.css"; // Import external CSS
 
 interface GameMenuProps {
   title: string;
-  onSave: () => void;
+  onSave: () => Promise<void>;
   onRestart: () => void;
   onVisitPortfolio: () => void;
   isVisible: boolean;
@@ -16,10 +16,33 @@ interface GameMenuProps {
 }
 
 export function GameMenu({ title, onSave, onRestart, onVisitPortfolio, isVisible, saving }: GameMenuProps) {
+  const [error, setError] = useState(""); // Error state for saving issues
+  const [statusMessage, setStatusMessage] = useState(""); // Message under the button
+
   if (!isVisible) return null;
 
   const score = useGameStore((state) => state.score);
   const kills = useGameStore((state) => state.kills);
+
+  // Handle Save with Error Handling
+  const handleSave = async () => {
+    setError("");
+    setStatusMessage("💾 Saving...");
+
+    try {
+      await onSave();
+      setStatusMessage("✅ Game saved successfully!");
+    } catch (err: any) {
+      if (err.message.includes("403")) {
+        setError("⚠️ Access Denied: You may not have permission to save.");
+      } else if (err.message.includes("500")) {
+        setError("❌ Server Error: Try again later.");
+      } else {
+        setError("❌ Unexpected error while saving. Please try again.");
+      }
+      setStatusMessage(""); // Reset success message if there's an error
+    }
+  };
 
   return (
     <div className="game-menu">
@@ -37,12 +60,18 @@ export function GameMenu({ title, onSave, onRestart, onVisitPortfolio, isVisible
 
         {/* Buttons Side by Side */}
         <div className="menu-buttons">
-          <button className="menu-button save" onClick={onSave} disabled={saving}>
+          <button className="menu-button save" onClick={handleSave} disabled={saving}>
             {saving ? "💾 Saving..." : "💾 Save"}
           </button>
           <button className="menu-button restart" onClick={onRestart}>🔄 Restart</button>
-          <button className="menu-button portfolio" onClick={onVisitPortfolio}>🚀 Portfolio</button>
+          <button className="menu-button portfolio" onClick={onVisitPortfolio}>
+            🚀 Portfolio
+          </button>
         </div>
+
+        {/* Status and Error Messages Below Buttons */}
+        {statusMessage && <p className="status-message">{statusMessage}</p>}
+        {error && <p className="error-message">{error}</p>}
       </div>
     </div>
   );

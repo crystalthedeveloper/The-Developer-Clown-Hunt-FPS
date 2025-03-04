@@ -4,7 +4,7 @@
 
 import { useBox } from "@react-three/cannon";
 import * as THREE from "three";
-import { GROUND_SIZE } from "../App";
+import { GROUND_SIZE } from "./GameCanvas";
 
 interface GroundProps {
   size?: [number, number];

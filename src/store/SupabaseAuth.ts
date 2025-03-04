@@ -3,118 +3,68 @@
 import { supabase } from "./supabaseClient";
 
 export const SupabaseAuth = {
-  /** ✅ User Login with Email */
+  /** User Login with Email */
   async signInWithEmail(email: string, password: string) {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error) {
-        console.error("⚠️ Login failed:", error.message);
-        return null;
+        return null; // Return null on failure
       }
 
-      console.log("✅ User logged in:", data?.user);
+      // Store session in localStorage to persist login
+      if (data?.session) {
+        localStorage.setItem("supabaseSession", JSON.stringify(data.session));
+      }
+
       return data?.user ?? null;
-    } catch (err) {
-      console.error("❌ Unexpected login error:", err);
-      return null;
+    } catch {
+      return null; // Handle unexpected errors
     }
   },
 
-  /** ✅ User Logout */
+  /** User Logout */
   async signOut() {
     try {
       const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error("⚠️ Logout failed:", error.message);
-      } else {
-        console.log("✅ User logged out successfully");
+      if (!error) {
+        localStorage.removeItem("supabaseSession"); // 🗑 Clear stored session
       }
-    } catch (err) {
-      console.error("❌ Unexpected logout error:", err);
+    } catch {
+      // Handle unexpected logout errors silently
     }
   },
 
-  /** ✅ Fetch the Currently Logged-in User */
+  /** Fetch the Currently Logged-in User */
   async getUser() {
     try {
-      console.log("🔄 Checking if user is authenticated...");
-
-      // ✅ Instead of refreshing the session, get the latest session info
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-
-      if (sessionError || !sessionData.session) {
-        console.warn("⚠️ No active session found.");
-        return null;
+      // First, check if a session exists in localStorage (for persistent login)
+      const storedSession = localStorage.getItem("supabaseSession");
+      if (storedSession) {
+        const parsedSession = JSON.parse(storedSession);
+        await supabase.auth.setSession(parsedSession);
       }
 
-      console.log("✅ Session found, checking user...");
+      // Fetch the latest session from Supabase
+      const { data: sessionData } = await supabase.auth.getSession();
 
-      // ✅ Now fetch the user
-      const { data, error } = await supabase.auth.getUser();
-
-      if (error || !data?.user) {
-        console.warn("⚠️ No user found, session might have expired.");
-        return null;
+      if (!sessionData.session) {
+        return null; // No active session found
       }
 
-      console.log("✅ Authenticated User:", data.user);
+      // Now fetch the user
+      const { data } = await supabase.auth.getUser();
+
+      if (!data?.user) {
+        return null; // No user found, session might have expired
+      }
+
       return {
         ...data.user,
         fullName: data.user.user_metadata?.full_name || "Player",
       };
-    } catch (err) {
-      console.error("❌ Error fetching user:", err);
-      return null;
-    }
-  },
-
-  /** ✅ Get Active Session */
-  async getSession() {
-    try {
-      const { data, error } = await supabase.auth.getSession();
-      if (error || !data?.session) {
-        console.warn("⚠️ No active session found.");
-        return null;
-      }
-      console.log("✅ Active session retrieved.");
-      return data.session;
-    } catch (err) {
-      console.error("❌ Error retrieving session:", err);
-      return null;
-    }
-  },
-
-  /** ✅ Auto-Persist Session */
-  async getOrRefreshSession() {
-    try {
-      let session = await this.getSession();
-
-      if (!session) {
-        console.log("🔄 No active session found, trying to re-authenticate...");
-        session = await this.refreshSession();
-      }
-
-      return session;
-    } catch (err) {
-      console.error("❌ Error auto-refreshing session:", err);
-      return null;
-    }
-  },
-
-  /** ✅ Refresh Auth Session */
-  async refreshSession() {
-    try {
-      const { data, error } = await supabase.auth.getSession(); // 🔄 Use getSession() instead
-      if (error || !data?.session) {
-        console.warn("⚠️ Failed to refresh session.");
-        return null;
-      }
-      console.log("✅ Session refreshed successfully.");
-      return data.session;
-    } catch (err) {
-      console.error("❌ Error refreshing session:", err);
-      return null;
+    } catch {
+      return null; // Handle errors silently
     }
   },
 };
