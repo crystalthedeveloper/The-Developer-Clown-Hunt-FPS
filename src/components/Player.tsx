@@ -63,17 +63,14 @@ export const Player = forwardRef<PlayerRef, PlayerProps>(
         .add(camera.position);
       camera.lookAt(cameraTarget);
 
-      // Stop spinning when not moving
       if (velocity.z === 0 && velocity.x === 0) {
-        api.angularVelocity.set(0, 0, 0); // Stop spinning when the player is not moving
+        api.angularVelocity.set(0, 0, 0);
       }
 
-      // Fall detection
       if (playerPosition.y < -2) {
         onDie();
       }
 
-      // Simple collision with clowns
       clownData.forEach((clown) => {
         if (!clown.isAlive) return;
         const clownPosition = new THREE.Vector3(...clown.position);
@@ -82,9 +79,11 @@ export const Player = forwardRef<PlayerRef, PlayerProps>(
         }
       });
 
-      // Clean up bullets that went far away (safety fallback)
+      // ✅ Handle bullet movement inside `useFrame()`
       bulletsRef.current.forEach((bullet, index) => {
-        if (bullet.position.length() > 200) {
+        bullet.position.add(bullet.userData.velocity);
+
+        if (bullet.position.length() > 100) {
           scene.remove(bullet);
           bulletsRef.current.splice(index, 1);
         }
@@ -102,27 +101,10 @@ export const Player = forwardRef<PlayerRef, PlayerProps>(
 
       const bulletStartPosition = camera.position.clone().add(cameraDirection.clone().multiplyScalar(0.8));
       bullet.position.copy(bulletStartPosition);
+      bullet.userData.velocity = cameraDirection.clone().multiplyScalar(1.5);
 
       scene.add(bullet);
       bulletsRef.current.push(bullet);
-
-      const bulletVelocity = cameraDirection.clone().multiplyScalar(1.5);
-
-      const bulletInterval = setInterval(() => {
-        bullet.position.add(bulletVelocity);
-
-        // If bullet is too far, remove it
-        if (bullet.position.length() > 100) {
-          scene.remove(bullet);
-          bulletsRef.current = bulletsRef.current.filter((b) => b !== bullet);
-          clearInterval(bulletInterval);
-        }
-
-        // Defensive check: if the bullet is removed by collision, stop interval
-        if (!bullet.parent) {
-          clearInterval(bulletInterval);
-        }
-      }, 20);
     };
 
     return (

@@ -42,19 +42,25 @@ function GameCanvas() {
     const { scene: logosModel } = useGLTF("/logos.glb");
     const logoChildrenCount = logosModel.children.length;
 
+    // ✅ Ensure game state is reset when starting a new session
     useEffect(() => {
         resetGame();
-
-        setLogoPositions(generateUniquePositions(TOTAL_LOGOS, 3, 3, 0)); // ✅ Logos are on the ground
-        setClownData(generateUniquePositions(TOTAL_CLOWNS, 3, 3, 1).map((pos, index) => ({
+        setLogoPositions(generateUniquePositions(TOTAL_LOGOS, 5, 3, 0));
+        setClownData(generateUniquePositions(TOTAL_CLOWNS, 5, 3, 1).map((pos, index) => ({
             id: index,
             position: pos,
             isAlive: true,
         })));
     }, []);
 
-
-    const generateUniquePositions = (count: number, minDistanceFromPlayer = 3, minDistanceBetweenObjects = 3, yPosition = 0): [number, number, number][] => {
+    // Ensure objects don't overlap by checking against existing positions
+    const generateUniquePositions = (
+        count: number,
+        minDistanceFromPlayer = 5,
+        minDistanceBetweenObjects = 3,
+        yPosition = 0,
+        existingObjects: [number, number, number][] = [] // Added parameter to avoid overlaps
+    ): [number, number, number][] => {
         const positions: [number, number, number][] = [];
 
         for (let i = 0; i < count; i++) {
@@ -64,7 +70,7 @@ function GameCanvas() {
             do {
                 position = [
                     Math.random() * GROUND_SIZE - GROUND_SIZE / 2,
-                    yPosition, // ✅ Ensure objects are on the ground
+                    yPosition,
                     Math.random() * GROUND_SIZE - GROUND_SIZE / 2
                 ];
 
@@ -75,8 +81,7 @@ function GameCanvas() {
 
                 isTooClose = distanceToPlayer < minDistanceFromPlayer;
 
-                // ✅ Check against all previously placed objects to prevent overlap
-                for (const existing of positions) {
+                for (const existing of [...positions, ...existingObjects]) {
                     const distanceToExisting = Math.sqrt(
                         (position[0] - existing[0]) ** 2 +
                         (position[2] - existing[2]) ** 2
@@ -95,37 +100,62 @@ function GameCanvas() {
         return positions;
     };
 
+    // ✅ Ensure game state is reset when starting a new session
+    useEffect(() => {
+        resetGame();
 
+        // ✅ Generate positions for static objects first
+        const logoPositions = generateUniquePositions(TOTAL_LOGOS, 5, 3, 0);
+        const blackBoxPositions = generateUniquePositions(TOTAL_BLACKBOXES, 5, 3, 0, logoPositions);
+        const dieBoxPositions = generateUniquePositions(TOTAL_DIEBOXES, 5, 3, 0, [...logoPositions, ...blackBoxPositions]);
 
+        // ✅ Generate clown positions ensuring they don't overlap with anything
+        const clownPositions = generateUniquePositions(TOTAL_CLOWNS, 5, 3, 1, [...logoPositions, ...blackBoxPositions, ...dieBoxPositions]);
 
-
-    const handleLogoCollect = () => {
-        setCollectedLogos(collectedLogos + 1);
-        increaseScore(8);
-        if (collectedLogos + 1 === TOTAL_LOGOS) {
-            setGameOver("win");
-        }
-    };
-
-    const handleRestart = () => {
-        resetGame(); // Resets game state
-
-        // Reinitialize clowns
-        setClownData(generateUniquePositions(TOTAL_CLOWNS, 3, 3, 1).map((pos, index) => ({
+        setLogoPositions(logoPositions);
+        setClownData(clownPositions.map((pos, index) => ({
             id: index,
             position: pos,
             isAlive: true,
         })));
+    }, []);
 
-        // Reset collected logos if needed
+
+    // ✅ Handle logo collection and win condition
+    const handleLogoCollect = () => {
+        const newCollectedLogos = collectedLogos + 1;
+        setCollectedLogos(newCollectedLogos);
+        increaseScore(8);
+
+        if (newCollectedLogos === TOTAL_LOGOS) {
+            setGameOver("win");
+        }
+    };
+
+    // ✅ Restart the game properly
+    const handleRestart = () => {
+        resetGame();
+        setLogoPositions(generateUniquePositions(TOTAL_LOGOS, 5, 3, 0));
+        setClownData(generateUniquePositions(TOTAL_CLOWNS, 5, 3, 1).map((pos, index) => ({
+            id: index,
+            position: pos,
+            isAlive: true,
+        })));
         setCollectedLogos(0);
     };
 
-
+    // ✅ Save game with error handling
     const handleSaveGame = async () => {
+        if (!gameResult) {
+            console.error("❌ Error: No game result available to save.");
+            return;
+        }
+
         setSaving(true);
         try {
-            await SupabasePlayerStats.savePlayerStats(score, kills);
+            await SupabasePlayerStats.savePlayerStats(score, kills, gameResult);
+        } catch (err) {
+            console.error("❌ Error saving game:", err);
         } finally {
             setSaving(false);
         }
@@ -153,12 +183,12 @@ function GameCanvas() {
             <Scoreboard />
             <Canvas shadows camera={{ position: [0, 10, 25], fov: 50 }} style={{ height: "100%", width: "100%" }}>
                 <Suspense fallback={<Html center>Loading...</Html>}>
-                    <Environment preset="studio" background />
+                    <Environment preset="studio" background backgroundBlurriness={0.5} />
                     <Physics gravity={[0, -50, 0]}>
                         <Player ref={playerRef} bulletsRef={bulletsRef} onDie={() => setGameOver("lose")} />
                         <Ground size={[GROUND_SIZE, GROUND_SIZE]} />
 
-                        {/* ✅ Clown Rendering */}
+                        {/* ✅ Render Clowns */}
                         {clownData.map((clown) =>
                             clown.isAlive ? (
                                 <Clown
@@ -180,24 +210,21 @@ function GameCanvas() {
                             ) : null
                         )}
 
-                        {/* ✅ Logo Rendering (Ensured to be on the ground) */}
+                        {/* ✅ Render Logos */}
                         {logoPositions.map((position, index) => (
                             <LogoItem
                                 key={index}
                                 playerRef={playerRef}
-                                position={[position[0], 0.5, position[2]]} // ✅ Explicitly setting Y to 0
+                                position={[position[0], 0.5, position[2]]}
                                 model={logosModel}
                                 logoIndex={index % logoChildrenCount}
                                 onCollect={handleLogoCollect}
                             />
                         ))}
 
-
                         {/* ✅ Static Objects */}
-                        <BlackBoxes existingPositions={generateUniquePositions(TOTAL_BLACKBOXES, 3, 3, 0)} />
-                        <DieBoxes existingPositions={generateUniquePositions(TOTAL_DIEBOXES, 3, 3, 0)} onPlayerDie={() => setGameOver("lose")} />
-
-
+                        <BlackBoxes existingPositions={generateUniquePositions(TOTAL_BLACKBOXES, 5, 3, 0)} />
+                        <DieBoxes existingPositions={generateUniquePositions(TOTAL_DIEBOXES, 5, 3, 0)} onPlayerDie={() => setGameOver("lose")} />
 
                         {/* ✅ Movable Black Boxes */}
                         {[...Array(TOTAL_MOVABLE_BLACKBOXES)].map((_, index) => (

@@ -105,8 +105,18 @@ input::placeholder {
     margin-top: 10px;
 }
 
+/* Button wrap */
+.button-group {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    /* Space between buttons */
+    margin-top: 15px;
+}
+
 /* 🔙 Back Button */
-.back-button {
+.back-button,
+.next-button {
     background: rgba(30, 30, 30, 0.7);
     border: 1px solid #555;
     padding: 10px;
@@ -118,7 +128,8 @@ input::placeholder {
     margin-top: 20px;
 }
 
-.back-button:hover {
+.back-button:hover,
+.next-button:hover {
     background: rgba(50, 50, 50, 0.9);
     transform: scale(1.05);
 }

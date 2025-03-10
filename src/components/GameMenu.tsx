@@ -8,7 +8,7 @@ import "../css/GameMenu.css"; // Import external CSS
 
 interface GameMenuProps {
   title: string;
-  onSave: () => Promise<void>;
+  onSave: (gameResult: "win" | "lose") => Promise<void>;
   onRestart: () => void;
   onVisitPortfolio: () => void;
   isVisible: boolean;
@@ -23,6 +23,7 @@ export function GameMenu({ title, onSave, onRestart, onVisitPortfolio, isVisible
 
   const score = useGameStore((state) => state.score);
   const kills = useGameStore((state) => state.kills);
+  const gameResult = title.includes("Win") ? "win" : "lose"; // ✅ Determine game result from title
 
   // Handle Save with Error Handling
   const handleSave = async () => {
@@ -30,7 +31,7 @@ export function GameMenu({ title, onSave, onRestart, onVisitPortfolio, isVisible
     setStatusMessage("💾 Saving...");
 
     try {
-      await onSave();
+      await onSave(gameResult); // ✅ Pass Win/Lose to save function
       setStatusMessage("✅ Game saved successfully!");
     } catch (err: any) {
       if (err.message.includes("403")) {
@@ -40,7 +41,7 @@ export function GameMenu({ title, onSave, onRestart, onVisitPortfolio, isVisible
       } else {
         setError("❌ Unexpected error while saving. Please try again.");
       }
-      setStatusMessage(""); // Reset success message if there's an error
+      setStatusMessage("");
     }
   };
 
@@ -49,13 +50,14 @@ export function GameMenu({ title, onSave, onRestart, onVisitPortfolio, isVisible
       <div className="game-menu-content">
         <h1 className="menu-title">{title}</h1>
         <p className="menu-subtitle">
-          {title.includes("Win") ? "🎉 Congratulations!" : "👻 Try again!"}
+          {gameResult === "win" ? "🎉 Congratulations!" : "👻 Try again!"}
         </p>
 
         {/* Score & Kills Display */}
         <div className="game-stats">
           <p>🏆 Score: <strong>{score}</strong></p>
           <p>💀 Kills: <strong>{kills}</strong></p>
+          <p>🎮 Result: <strong>{gameResult === "win" ? "✅ Victory!" : "❌ Defeat"}</strong></p>
         </div>
 
         {/* Buttons Side by Side */}
