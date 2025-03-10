@@ -3,68 +3,82 @@
 import { supabase } from "./supabaseClient";
 
 export const SupabaseAuth = {
-  /** User Login with Email */
+  /** ✅ User Login with Email */
   async signInWithEmail(email: string, password: string) {
     try {
+      console.log("🔑 Attempting email login...");
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error) {
-        return null; // Return null on failure
+        console.error("❌ Login failed:", error.message);
+        return null;
       }
 
-      // Store session in localStorage to persist login
       if (data?.session) {
         localStorage.setItem("supabaseSession", JSON.stringify(data.session));
+        console.log("✅ Login successful. Session stored.");
       }
 
       return data?.user ?? null;
-    } catch {
-      return null; // Handle unexpected errors
+    } catch (err) {
+      console.error("❌ Unexpected login error:", err);
+      return null;
     }
   },
 
-  /** User Logout */
+  /** ✅ Refresh Supabase Session */
+  async refreshSession() {
+    try {
+      console.log("🔄 Refreshing Supabase session...");
+      const { data, error } = await supabase.auth.getSession();
+
+      if (error || !data?.session) {
+        console.warn("⚠️ Session expired or unavailable. Logging out...");
+        await this.signOut();
+        return null;
+      }
+
+      console.log("✅ Session refreshed successfully.");
+      return data.session;
+    } catch (err) {
+      console.error("❌ Error refreshing session:", err);
+      return null;
+    }
+  },
+
+  /** ✅ User Logout */
   async signOut() {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (!error) {
-        localStorage.removeItem("supabaseSession"); // 🗑 Clear stored session
-      }
-    } catch {
-      // Handle unexpected logout errors silently
+      console.log("🚪 Logging out user...");
+      await supabase.auth.signOut();
+      localStorage.removeItem("supabaseSession");
+      console.log("✅ User logged out successfully.");
+    } catch (err) {
+      console.error("❌ Error logging out:", err);
     }
   },
 
-  /** Fetch the Currently Logged-in User */
+  /** ✅ Fetch the Currently Logged-in User */
   async getUser() {
     try {
-      // First, check if a session exists in localStorage (for persistent login)
-      const storedSession = localStorage.getItem("supabaseSession");
-      if (storedSession) {
-        const parsedSession = JSON.parse(storedSession);
-        await supabase.auth.setSession(parsedSession);
+      console.log("👤 Fetching authenticated user...");
+      const session = await this.refreshSession();
+      if (!session) {
+        console.warn("⚠️ No active session. Returning null.");
+        return null;
       }
 
-      // Fetch the latest session from Supabase
-      const { data: sessionData } = await supabase.auth.getSession();
-
-      if (!sessionData.session) {
-        return null; // No active session found
+      const { data, error } = await supabase.auth.getUser();
+      if (error) {
+        console.error("❌ Error fetching user:", error.message);
+        return null;
       }
 
-      // Now fetch the user
-      const { data } = await supabase.auth.getUser();
-
-      if (!data?.user) {
-        return null; // No user found, session might have expired
-      }
-
-      return {
-        ...data.user,
-        fullName: data.user.user_metadata?.full_name || "Player",
-      };
-    } catch {
-      return null; // Handle errors silently
+      console.log("✅ User fetched successfully.");
+      return data?.user ?? null;
+    } catch (err) {
+      console.error("❌ Unexpected error fetching user:", err);
+      return null;
     }
   },
 };

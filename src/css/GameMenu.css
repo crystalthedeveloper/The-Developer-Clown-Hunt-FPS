@@ -91,4 +91,8 @@
   
   .error-message {
     color: #ff5252; /* Red error message */
-  }  
+  } 
+  
+  .brand{
+    color: #ffe600;
+  }

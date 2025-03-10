@@ -55,9 +55,11 @@ export function GameMenu({ title, onSave, onRestart, onVisitPortfolio, isVisible
 
         {/* Score & Kills Display */}
         <div className="game-stats">
-          <p>🏆 Score: <strong>{score}</strong></p>
-          <p>💀 Kills: <strong>{kills}</strong></p>
-          <p>🎮 Result: <strong>{gameResult === "win" ? "✅ Victory!" : "❌ Defeat"}</strong></p>
+        <div className="menu-buttons">
+          <p>🏆 Score: <strong className="brand">{score}</strong></p>
+          <p>💀 Kills: <strong className="brand">{kills}</strong></p>
+          </div>
+          <p>🎮 Result: <strong>{gameResult === "win" ? "😁 Victory!" : "💀 Defeat"}</strong></p>
         </div>
 
         {/* Buttons Side by Side */}

@@ -26,6 +26,12 @@ interface GameState {
   kills: number;
   collectedLogos: number;
   totalLogos: number;
+  totalClowns: number;
+  totalBlackBoxes: number;
+  totalDieBoxes: number;
+  totalMovableBlackBoxes: number;
+  groundSize: number;
+  playerStartPosition: Position;
   isGameOver: boolean;
   gameResult: "win" | "lose" | null;
   clownData: Clown[];
@@ -42,9 +48,29 @@ interface GameState {
 
 export const useGameStore = create<PlayerState & GameState>()(
   subscribeWithSelector((set) => ({
+    // ✅ Player movement state
     velocity: { x: 0, z: 0 },
     rotation: 0,
 
+    // ✅ Game World Settings stored in Zustand
+    groundSize: 75, // 🔥 Game world size
+    playerStartPosition: [0, 1, 0], // 🔥 Player spawn location
+    totalBlackBoxes: 20, 
+    totalDieBoxes: 10,  
+    totalMovableBlackBoxes: 10,
+    totalLogos: 25,
+    totalClowns: 50, 
+
+    // ✅ Game state variables
+    score: 0,
+    kills: 0,
+    collectedLogos: 0,
+    isGameOver: false,
+    gameResult: null,
+    clownData: [],
+    logoPositions: [],
+
+    // ✅ Player movement methods (Fix for missing functions)
     setVelocity: (x, z) =>
       set(() => ({
         velocity: { x, z },
@@ -64,15 +90,7 @@ export const useGameStore = create<PlayerState & GameState>()(
         rotation: 0,
       })),
 
-    score: 0,
-    kills: 0,
-    collectedLogos: 0,
-    totalLogos: 3,
-    isGameOver: false,
-    gameResult: null,
-    clownData: [],
-    logoPositions: [],
-
+    // ✅ Game state methods
     setGameOver: (result) =>
       set(() => ({
         isGameOver: true,
@@ -89,6 +107,7 @@ export const useGameStore = create<PlayerState & GameState>()(
     increaseKills: () =>
       set((state) => ({
         kills: state.kills + 1,
+        score: state.score + 20, // ✅ Increased score per kill
       })),
 
     setCollectedLogos: (valueOrUpdater) =>
@@ -100,6 +119,7 @@ export const useGameStore = create<PlayerState & GameState>()(
 
         return {
           collectedLogos: newCount,
+          score: state.score + 40, // ✅ Increased score per logo
           isGameOver: newCount >= state.totalLogos,
           gameResult: newCount >= state.totalLogos ? "win" : state.gameResult,
         };
@@ -118,8 +138,9 @@ export const useGameStore = create<PlayerState & GameState>()(
         logoPositions: positions,
       })),
 
+    // ✅ Reset game state
     resetGame: () =>
-      set(() => ({
+      set((state) => ({
         score: 0,
         kills: 0,
         collectedLogos: 0,
@@ -129,6 +150,11 @@ export const useGameStore = create<PlayerState & GameState>()(
         logoPositions: [],
         velocity: { x: 0, z: 0 },
         rotation: 0,
+        totalLogos: state.totalLogos,
+        totalClowns: state.totalClowns,
+        totalBlackBoxes: state.totalBlackBoxes,
+        totalDieBoxes: state.totalDieBoxes,
+        totalMovableBlackBoxes: state.totalMovableBlackBoxes,
       })),
   }))
 );

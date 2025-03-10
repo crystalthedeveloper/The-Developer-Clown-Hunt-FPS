@@ -3,28 +3,32 @@
 // making it interactable with other objects, such as the player and obstacles.
 
 import { useBox } from "@react-three/cannon";
+import { useGameStore } from "../store/store"; // ✅ Fetch `groundSize` from Zustand
 import * as THREE from "three";
-import { GROUND_SIZE } from "./GameCanvas";
 
 interface GroundProps {
   size?: [number, number];
 }
 
-export function Ground({ size = [GROUND_SIZE, GROUND_SIZE] }: GroundProps) {
+export function Ground({ size }: GroundProps) {
+  const groundSize = useGameStore((state) => state.groundSize); // ✅ Get from Zustand
+  const finalSize = size ?? [groundSize, groundSize]; // ✅ Default to Zustand's size
+
   const [ref] = useBox<THREE.Mesh>(() => ({
-    args: [size[0], 1, size[1]], // Define the size of the ground
-    position: [0, -0.05, 0], // Position the ground slightly below the player
-    type: "Static", // Make the ground a static object that doesn't move
+    args: [finalSize[0], 1, finalSize[1]], // Define the size of the ground
+    position: [0, -0.5, 0], // ✅ Lowered to avoid player floating
+    rotation: [0, 0, 0], // ✅ Ensures ground is flat
+    type: "Static", // ✅ Make the ground a static object
   }));
 
   return (
     <mesh ref={ref} receiveShadow>
-      <boxGeometry args={[size[0], 1, size[1]]} />
+      <boxGeometry args={[finalSize[0], 1, finalSize[1]]} />
       <meshStandardMaterial
-        color="#1f2022" // Dark color for the ground
-        roughness={0.1} // Slightly rough surface
-        metalness={1} // Full metallic surface for the ground
-        envMapIntensity={1} // Reflective surface settings
+        color="#1f2022" // ✅ Dark color for the ground
+        roughness={0.3} // ✅ Improved roughness for a more realistic surface
+        metalness={0.5} // ✅ Reduced metalness to make it look less shiny
+        envMapIntensity={0.8} // ✅ Slightly dimmed reflections
       />
     </mesh>
   );

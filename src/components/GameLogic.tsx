@@ -3,26 +3,24 @@ import { useGameStore } from "../store/store";
 
 export const useGameLogic = () => {
     const { 
-        increaseScore, increaseKills, isGameOver, gameResult, setGameOver, resetGame, 
-        collectedLogos, setCollectedLogos 
-    } = useGameStore();
+        increaseKills, isGameOver, gameResult, setGameOver, resetGame, 
+        collectedLogos, setCollectedLogos, totalLogos 
+    } = useGameStore(); // ✅ Removed increaseScore
 
     // ✅ Handle killing a clown (Player gets 10 points)
     const handleClownKill = (clownId: number, setClownData: Function) => {
         setClownData((prev: any) =>
             prev.map((c: any) => (c.id === clownId ? { ...c, isAlive: false } : c))
         );
-        increaseKills();
-        increaseScore(10); // ✅ Increase score when a clown is killed
+        increaseKills(); // ✅ Score is automatically handled inside increaseKills
     };
 
     // ✅ Handle collecting a logo
     const handleLogoCollect = () => {
         const newCollectedCount = collectedLogos + 1;
-        increaseScore(8); // ✅ Each logo gives 8 points
-        setCollectedLogos(newCollectedCount);
+        setCollectedLogos(newCollectedCount); // ✅ Score is automatically handled in store
 
-        if (newCollectedCount === 3) {
+        if (newCollectedCount === totalLogos) { 
             setGameOver("win");
         }
     };
