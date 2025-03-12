@@ -90,11 +90,18 @@ const PlayerControls: React.FC<PlayerControlsProps> = ({ onShoot }) => {
     // ✅ Disable right-click context menu
     const disableContextMenu = (event: MouseEvent) => event.preventDefault();
     document.addEventListener("contextmenu", disableContextMenu);
+     
+    // ✅ Prevent selecting all text (Ctrl + A) & double-click selection
+  const disableSelection = (event: Event) => event.preventDefault();
+  document.addEventListener("selectstart", disableSelection);
+  document.addEventListener("mousedown", disableSelection);
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
       document.removeEventListener("contextmenu", disableContextMenu);
+      document.removeEventListener("selectstart", disableSelection);
+      document.removeEventListener("mousedown", disableSelection);
 
       if (movementInterval.current) clearInterval(movementInterval.current);
       if (rotationInterval.current) clearInterval(rotationInterval.current);
