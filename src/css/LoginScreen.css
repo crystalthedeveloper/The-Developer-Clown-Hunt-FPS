@@ -60,7 +60,6 @@ input {
     border-radius: 8px;
     color: #fff;
     font-size: 1rem;
-    text-align: center;
 }
 
 input::placeholder {
@@ -104,8 +103,6 @@ input::placeholder {
     display: flex;
     justify-content: center;
     gap: 10px;
-    /* Space between buttons */
-    margin-top: 15px;
 }
 
 /* 🔙 Back Button */
@@ -120,6 +117,7 @@ input::placeholder {
     color: #ddd;
     transition: 0.3s;
     margin-top: 20px;
+    width: 100%;
 }
 
 .back-button:hover,
@@ -133,7 +131,6 @@ input::placeholder {
     
     .login-screen {
         background: url('/game-screenshot-mobile.jpg') center/cover no-repeat;
-        padding: 5px;
     }
 
     .login-box {
@@ -157,7 +154,8 @@ input::placeholder {
     }
 
     .button-group {
-        flex-direction: column; /* Stacks buttons on smaller screens */
+        flex-direction: column;
+        gap: 0px;
     }
 
     .back-button,
