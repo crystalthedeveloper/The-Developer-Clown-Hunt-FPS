@@ -58,9 +58,8 @@
 
 /* Buttons Side by Side */
 .menu-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
+    display: inline-block;
+    width: 100%;
 }
 
 /* Button Styles */

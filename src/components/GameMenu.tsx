@@ -65,9 +65,6 @@ export function GameMenu({ title, onSave, onRestart, onVisitPortfolio, isVisible
           <button className="menu-button save" onClick={handleSave} disabled={saving}>
             {saving ? "💾 Saving..." : "💾 Save"}
           </button>
-
-        </div>
-        <div className="menu-buttons">
           <button className="menu-button restart" onClick={onRestart}>🔄 Restart</button>
           <button className="menu-button portfolio" onClick={onVisitPortfolio}>
             🏢 Corporate Site
