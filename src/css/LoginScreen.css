@@ -130,8 +130,38 @@ input::placeholder {
 
 /* 📱 Mobile Optimizations */
 @media (max-width: 768px) {
-
+    
     .login-screen {
         background: url('/game-screenshot-mobile.jpg') center/cover no-repeat;
+        padding: 5px;
+    }
+
+    .login-box {
+        width: 95%;
+        padding: 20px;
+        max-height: 85vh; /* Allows scrolling without cutting off content */
+    }
+
+    .login-box-header {
+        font-size: 1.6rem;
+    }
+
+    input {
+        font-size: 1rem;
+        padding: 12px;
+    }
+
+    .login-button {
+        font-size: 1.1rem;
+        padding: 12px;
+    }
+
+    .button-group {
+        flex-direction: column; /* Stacks buttons on smaller screens */
+    }
+
+    .back-button,
+    .next-button {
+        width: 100%;
     }
 }

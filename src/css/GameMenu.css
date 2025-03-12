@@ -73,7 +73,7 @@
     border: 1px solid #555;
     transition: all 0.3s ease;
     width: 100%;
-    margin: 10px;
+    margin-bottom: 10px;
 }
 
 .menu-button:hover {
@@ -105,8 +105,30 @@
 
 /* 📱 Mobile Optimizations */
 @media (max-width: 768px) {
-    
     .game-menu {
         background: url('/game-screenshot-mobile.jpg') center/cover no-repeat;
+    }
+
+    .game-menu-content {
+        width: 95%;
+        max-height: 85vh; /* Allows better scrolling */
+        padding: 20px;
+    }
+
+    .menu-title {
+        font-size: 1.8rem;
+    }
+
+    .menu-subtitle {
+        font-size: 1.1rem;
+    }
+
+    .game-stats {
+        font-size: 1rem;
+    }
+
+    .menu-button {
+        padding: 14px 18px;
+        font-size: 1rem;
     }
 }

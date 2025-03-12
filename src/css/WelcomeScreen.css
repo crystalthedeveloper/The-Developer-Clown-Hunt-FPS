@@ -101,24 +101,31 @@
 
 /* 📱 Mobile Optimizations */
 @media (max-width: 768px) {
-
     .welcome-screen {
         background: url('/game-screenshot-mobile.jpg') center/cover no-repeat;
+        padding: 5px;
     }
 
+    .welcome-box {
+        width: 95%;
+        padding: 20px;
+        max-height: 85vh; /* Allows scrolling without cut-off */
+    }
+
+    .welcome-box-header {
+        font-size: 1.6rem;
+    }
 
     .button-container {
-        flex-direction: row;
-        gap: 10px;
+        flex-direction: column;
+        gap: 12px;
     }
 
     .play-button,
     .corporate-button {
-        width: 100%;
-    }
-
-    .welcome-box-header {
-        font-size: 1.5rem;
+        font-size: 1rem;
+        padding: 12px;
+        max-width: 280px;
     }
 
     .controls {

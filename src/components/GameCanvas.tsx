@@ -59,7 +59,7 @@ function GameCanvas() {
     const generateUniquePositions = (
         count: number,
         minDistanceFromPlayer = 5,
-        minDistanceBetweenObjects = 5, 
+        minDistanceBetweenObjects = 5,
         yPosition = 0,
         existingObjects: [number, number, number][] = []
     ): [number, number, number][] => {
@@ -114,15 +114,27 @@ function GameCanvas() {
 
     // ✅ Restart game
     const handleRestart = () => {
+        // ✅ Reset the game state
         resetGame();
+    
+        // ✅ Explicitly reset score, kills, and collected logos without triggering score updates
+        useGameStore.setState({
+            score: 0,
+            kills: 0,
+            collectedLogos: 0, // Ensure no extra score is added
+            isGameOver: false,
+            gameResult: null
+        });
+    
+        // ✅ Regenerate positions
         setLogoPositions(generateUniquePositions(totalLogos, 5, 5, 0));
         setClownData(generateUniquePositions(totalClowns, 15, 5, 1).map((pos, index) => ({
             id: index,
             position: pos,
             isAlive: true,
         })));
-        setCollectedLogos(0);
     };
+    
 
     // ✅ Save game with error handling
     const handleSaveGame = async () => {
