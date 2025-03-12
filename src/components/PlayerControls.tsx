@@ -13,96 +13,90 @@ interface PlayerControlsProps {
 
 const PlayerControls: React.FC<PlayerControlsProps> = ({ onShoot }) => {
   const { setVelocity, setRotation } = useGameStore();
-  const pressedKeys = useRef<Set<string>>(new Set());
-  const movementInterval = useRef<number | null>(null);
+  const movementInterval = useRef<NodeJS.Timeout | null>(null);
+  const rotationInterval = useRef<NodeJS.Timeout | null>(null);
 
-  const handleKeyDown = (e: KeyboardEvent) => {
-    pressedKeys.current.add(e.key);
-    if (e.key === " ") onShoot();
-    startUpdatingMovement();
+  const handleStartMoving = (moveZ: number) => {
+    if (movementInterval.current) return;
+    movementInterval.current = setInterval(() => setVelocity(0, moveZ * 3.5), 16);
   };
 
-  const handleKeyUp = (e: KeyboardEvent) => {
-    pressedKeys.current.delete(e.key);
-    if (pressedKeys.current.size === 0 && movementInterval.current) {
+  const handleStopMoving = () => {
+    if (movementInterval.current) {
       clearInterval(movementInterval.current);
       movementInterval.current = null;
-      setVelocity(0, 0); // Only stop velocity, not rotation!
     }
+    setVelocity(0, 0);
   };
 
-  const startUpdatingMovement = () => {
-    if (movementInterval.current !== null) return;
-    movementInterval.current = window.setInterval(updateMovement, 16);
+  const handleStartRotating = (rotationChange: number) => {
+    if (rotationInterval.current) return;
+    rotationInterval.current = setInterval(() => setRotation((prev) => prev + rotationChange), 16);
   };
 
-  const updateMovement = () => {
-    let moveX = 0;
-    let moveZ = 0;
-    let rotationChange = 0;
-
-    if (pressedKeys.current.has("ArrowUp") || pressedKeys.current.has("w")) moveZ -= 1;
-    if (pressedKeys.current.has("ArrowDown") || pressedKeys.current.has("s")) moveZ += 1;
-    if (pressedKeys.current.has("ArrowLeft") || pressedKeys.current.has("a")) rotationChange += 0.03;
-    if (pressedKeys.current.has("ArrowRight") || pressedKeys.current.has("d")) rotationChange -= 0.03;
-
-    const length = Math.hypot(moveX, moveZ);
-    if (length > 0) {
-      moveX /= length;
-      moveZ /= length;
-    }
-
-    setVelocity(moveX * 3.5, moveZ * 3.5);
-    if (rotationChange !== 0) {
-      setRotation((prev) => prev + rotationChange);
+  const handleStopRotating = () => {
+    if (rotationInterval.current) {
+      clearInterval(rotationInterval.current);
+      rotationInterval.current = null;
     }
   };
 
   useEffect(() => {
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("keyup", handleKeyUp);
+    // Disable right-click context menu
+    const disableContextMenu = (event: MouseEvent) => event.preventDefault();
+    document.addEventListener("contextmenu", disableContextMenu);
 
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
-      if (movementInterval.current !== null) clearInterval(movementInterval.current);
+      document.removeEventListener("contextmenu", disableContextMenu);
+      if (movementInterval.current) clearInterval(movementInterval.current);
+      if (rotationInterval.current) clearInterval(rotationInterval.current);
     };
   }, []);
-
-  // Handle Mouse Click/Hold Buttons
-  const handleButtonMovementHold = (moveZ: number) => {
-    const interval = setInterval(() => setVelocity(0, moveZ * 3.5), 16);
-    const stopInterval = () => {
-      clearInterval(interval);
-      setVelocity(0, 0);
-      window.removeEventListener("mouseup", stopInterval);
-    };
-    window.addEventListener("mouseup", stopInterval);
-  };
-
-  const handleRotateHold = (rotationChange: number) => {
-    const interval = setInterval(() => setRotation((prev) => prev + rotationChange), 16);
-    const stopInterval = () => {
-      clearInterval(interval);
-      window.removeEventListener("mouseup", stopInterval);
-    };
-    window.addEventListener("mouseup", stopInterval);
-  };
 
   return (
     <div className="controls-container">
       <div>
-        <button onMouseDown={() => handleButtonMovementHold(-1)}>⬆️</button>
+        <button
+          onMouseDown={() => handleStartMoving(-1)}
+          onTouchStart={() => handleStartMoving(-1)}
+          onMouseUp={handleStopMoving}
+          onTouchEnd={handleStopMoving}
+        >
+          ⬆️
+        </button>
       </div>
 
       <div>
-        <button onMouseDown={() => handleRotateHold(0.03)}>⬅️</button>
-        <button onMouseDown={onShoot}>🔫</button>
-        <button onMouseDown={() => handleRotateHold(-0.03)}>➡️</button>
+        <button
+          onMouseDown={() => handleStartRotating(0.03)}
+          onTouchStart={() => handleStartRotating(0.03)}
+          onMouseUp={handleStopRotating}
+          onTouchEnd={handleStopRotating}
+        >
+          ⬅️
+        </button>
+        <button onMouseDown={onShoot} onTouchStart={onShoot}>
+          🔫
+        </button>
+        <button
+          onMouseDown={() => handleStartRotating(-0.03)}
+          onTouchStart={() => handleStartRotating(-0.03)}
+          onMouseUp={handleStopRotating}
+          onTouchEnd={handleStopRotating}
+        >
+          ➡️
+        </button>
       </div>
 
       <div>
-        <button onMouseDown={() => handleButtonMovementHold(1)}>⬇️</button>
+        <button
+          onMouseDown={() => handleStartMoving(1)}
+          onTouchStart={() => handleStartMoving(1)}
+          onMouseUp={handleStopMoving}
+          onTouchEnd={handleStopMoving}
+        >
+          ⬇️
+        </button>
       </div>
     </div>
   );

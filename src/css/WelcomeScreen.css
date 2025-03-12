@@ -5,21 +5,18 @@
     width: 100%;
     height: 100%;
     background: url('/game-screenshot.jpg') center/cover no-repeat;
-    /* Use game screenshot */
     color: #ccc;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    text-align: left;
+    text-align: center;
     font-family: "Arial", sans-serif;
-    cursor: default;
     opacity: 0;
     transform: scale(0.95);
     transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
-/* 🕹️ Add slight blur effect */
 .welcome-screen::before {
     content: "";
     position: absolute;
@@ -28,98 +25,106 @@
     width: 100%;
     height: 100%;
     backdrop-filter: blur(8px);
-    /* 👈 Increase blur effect */
     z-index: -1;
 }
 
-
-/* Make sure it fades in */
 .welcome-screen.fade-in {
     opacity: 1;
     transform: scale(1);
 }
 
-/* 🏆 3D Glass Box for the UI */
 .welcome-box {
     background: rgba(20, 20, 20, 0.5);
-    /* 👈 Transparent dark glass effect */
     border: 1px solid rgba(255, 255, 255, 0.2);
-    padding: 30px;
+    padding: 20px;
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(15px);
-    /* 👈 Glassmorphism effect */
     -webkit-backdrop-filter: blur(15px);
+    width: 90%;
+    max-width: 500px;
 }
 
 .welcome-box-header {
-    margin-bottom: 0px;
+    margin-bottom: 5px;
+    font-size: 1.8rem;
 }
 
-/* Buttons Side-by-Side */
+.username {
+    font-weight: bold;
+    color: #ffd700;
+}
+
 .button-container {
     display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 15px;
-    margin-top: 30px;
+    margin-top: 20px;
 }
 
-/* 🎮 Controls & 🎯 Play Buttons */
-.controls-button,
-.play-button {
+.play-button,
+.corporate-button {
     background: rgba(30, 30, 30, 0.7);
     border: 1px solid #555;
-    padding: 12px 30px;
-    font-size: 1.2rem;
+    padding: 12px 20px;
+    font-size: 1rem;
     font-weight: bold;
     cursor: pointer;
     border-radius: 8px;
     color: #ddd;
     transition: 0.3s;
     box-shadow: 0 5px 15px rgba(255, 255, 255, 0.1);
+    width: 100%;
+    max-width: 220px;
+    text-align: center;
 }
 
-.controls-button:hover,
-.play-button:hover {
-    background: rgba(50, 50, 50, 0.9);
-    transform: scale(1.05);
-}
-
-.controls-button:active,
-.play-button:active {
-    transform: scale(0.95);
-}
-
-/* 🎮 Control Info Box */
-.controls {
-    padding: 15px;
-    border-radius: 10px;
-    width: 320px;
-    text-align: left;
-    color: #fff;
-    font-size: 1rem;
-    opacity: 0;
-    transform: scale(0.95);
-    transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-.controls.fade-in {
-    opacity: 1;
-    transform: scale(1);
-}
-
-/* 🏢 Corporate Site Button */
-.corporate-button {
-    background: rgba(30, 30, 30, 0.7);
-    border: 1px solid #555;
-    padding: 10px 20px;
-    font-size: 1.2rem;
-    cursor: pointer;
-    border-radius: 8px;
-    color: #ddd;
-    transition: 0.3s;
-}
-
+.play-button:hover,
 .corporate-button:hover {
     background: rgba(50, 50, 50, 0.9);
     transform: scale(1.05);
+}
+
+.play-button:active,
+.corporate-button:active {
+    transform: scale(0.95);
+}
+
+/* 🎮 Always Visible Controls */
+.controls {
+    border-radius: 10px;
+    width: 100%;
+    text-align: center;
+    color: #fff;
+    font-size: 1rem;
+    opacity: 1;
+    transform: scale(1);
+    margin-top: 20px;
+}
+
+/* 📱 Mobile Optimizations */
+@media (max-width: 768px) {
+    .welcome-box {
+        padding: 15px;
+        width: 95%;
+    }
+
+    .button-container {
+        flex-direction: row;
+        gap: 10px;
+    }
+
+    .play-button,
+    .corporate-button {
+        width: 100%;
+    }
+
+    .welcome-box-header {
+        font-size: 1.5rem;
+    }
+
+    .controls {
+        font-size: 0.9rem;
+    }
 }

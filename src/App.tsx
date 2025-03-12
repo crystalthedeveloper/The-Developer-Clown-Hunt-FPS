@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import WelcomeScreen from "./components/WelcomeScreen";
 import LoginScreen from "./components/LoginScreen";
-import GameCanvas from "./components/GameCanvas"; // ✅ New component for rendering the game
+import GameCanvas from "./components/GameCanvas";
 import { SupabaseAuth } from "./store/SupabaseAuth";
 import "./App.css";
 
@@ -38,6 +38,31 @@ function App() {
       setLoading(false);
     }
     fetchUser();
+  }, []);
+
+  // ✅ Prevent zooming on touch and gestures
+  useEffect(() => {
+    const preventZoom = (event: TouchEvent) => {
+      if (event.touches.length > 1) {
+        event.preventDefault(); // Prevent pinch zoom
+      }
+    };
+
+    const preventGestureZoom = (event: Event) => {
+      event.preventDefault(); // Prevent iOS Safari gesture zooming
+    };
+
+    document.addEventListener("touchstart", preventZoom, { passive: false });
+    document.addEventListener("gesturestart", preventGestureZoom);
+    document.addEventListener("gesturechange", preventGestureZoom);
+    document.addEventListener("gestureend", preventGestureZoom);
+
+    return () => {
+      document.removeEventListener("touchstart", preventZoom);
+      document.removeEventListener("gesturestart", preventGestureZoom);
+      document.removeEventListener("gesturechange", preventGestureZoom);
+      document.removeEventListener("gestureend", preventGestureZoom);
+    };
   }, []);
 
   // ✅ Show LoginScreen if user is not authenticated
