@@ -55,11 +55,9 @@ export function GameMenu({ title, onSave, onRestart, onVisitPortfolio, isVisible
 
         {/* Score & Kills Display */}
         <div className="game-stats">
-        <div className="menu-buttons">
           <p>🏆 Score: <strong className="brand">{score}</strong></p>
           <p>💀 Kills: <strong className="brand">{kills}</strong></p>
-          </div>
-          <p>🎮 Result: <strong>{gameResult === "win" ? "😁 Victory!" : "💀 Defeat"}</strong></p>
+          <p>🎮 Result: <strong className="brand">{gameResult === "win" ? "😁 Victory!" : "Defeat"}</strong></p>
         </div>
 
         {/* Buttons Side by Side */}
@@ -67,9 +65,12 @@ export function GameMenu({ title, onSave, onRestart, onVisitPortfolio, isVisible
           <button className="menu-button save" onClick={handleSave} disabled={saving}>
             {saving ? "💾 Saving..." : "💾 Save"}
           </button>
+
+        </div>
+        <div className="menu-buttons">
           <button className="menu-button restart" onClick={onRestart}>🔄 Restart</button>
           <button className="menu-button portfolio" onClick={onVisitPortfolio}>
-            🚀 Portfolio
+            🏢 Corporate Site
           </button>
         </div>
 
