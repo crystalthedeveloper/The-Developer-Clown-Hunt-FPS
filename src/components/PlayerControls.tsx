@@ -90,11 +90,11 @@ const PlayerControls: React.FC<PlayerControlsProps> = ({ onShoot }) => {
     // ✅ Disable right-click context menu
     const disableContextMenu = (event: MouseEvent) => event.preventDefault();
     document.addEventListener("contextmenu", disableContextMenu);
-     
+
     // ✅ Prevent selecting all text (Ctrl + A) & double-click selection
-  const disableSelection = (event: Event) => event.preventDefault();
-  document.addEventListener("selectstart", disableSelection);
-  document.addEventListener("mousedown", disableSelection);
+    const disableSelection = (event: Event) => event.preventDefault();
+    document.addEventListener("selectstart", disableSelection);
+    document.addEventListener("mousedown", disableSelection);
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
@@ -109,54 +109,56 @@ const PlayerControls: React.FC<PlayerControlsProps> = ({ onShoot }) => {
   }, []);
 
   return (
-    <div className="controls-container">
-      <div>
-        <button
-          onMouseDown={() => handleStartMoving(-1)}
-          onTouchStart={() => handleStartMoving(-1)}
-          onMouseUp={handleStopMoving}
-          onTouchEnd={handleStopMoving}
-        >
-          ⬆️
-        </button>
+    <>
+      {/* Controls on Left Side */}
+      <div className="controls-container">
+        <div>
+          <button
+            onMouseDown={() => handleStartMoving(-1)}
+            onTouchStart={() => handleStartMoving(-1)}
+            onMouseUp={handleStopMoving}
+            onTouchEnd={handleStopMoving}
+          >
+            ⬆️
+          </button>
+        </div>
+
+        <div>
+          <button
+            onMouseDown={() => handleStartRotating(0.03)}
+            onTouchStart={() => handleStartRotating(0.03)}
+            onMouseUp={handleStopRotating}
+            onTouchEnd={handleStopRotating}
+          >
+            ⬅️
+          </button>
+          <button
+            onMouseDown={() => handleStartRotating(-0.03)}
+            onTouchStart={() => handleStartRotating(-0.03)}
+            onMouseUp={handleStopRotating}
+            onTouchEnd={handleStopRotating}
+          >
+            ➡️
+          </button>
+        </div>
+
+        <div>
+          <button
+            onMouseDown={() => handleStartMoving(1)}
+            onTouchStart={() => handleStartMoving(1)}
+            onMouseUp={handleStopMoving}
+            onTouchEnd={handleStopMoving}
+          >
+            ⬇️
+          </button>
+        </div>
       </div>
 
-      <div>
-        <button
-          onMouseDown={() => handleStartRotating(0.03)}
-          onTouchStart={() => handleStartRotating(0.03)}
-          onMouseUp={handleStopRotating}
-          onTouchEnd={handleStopRotating}
-        >
-          ⬅️
-        </button>
-        <button
-          onMouseDown={onShoot}
-          onTouchStart={onShoot}
-        >
-          🔫
-        </button>
-        <button
-          onMouseDown={() => handleStartRotating(-0.03)}
-          onTouchStart={() => handleStartRotating(-0.03)}
-          onMouseUp={handleStopRotating}
-          onTouchEnd={handleStopRotating}
-        >
-          ➡️
-        </button>
+      {/* Shooting Button on Right Side */}
+      <div className="shoot-container">
+        <button onMouseDown={onShoot} onTouchStart={onShoot}>🔫</button>
       </div>
-
-      <div>
-        <button
-          onMouseDown={() => handleStartMoving(1)}
-          onTouchStart={() => handleStartMoving(1)}
-          onMouseUp={handleStopMoving}
-          onTouchEnd={handleStopMoving}
-        >
-          ⬇️
-        </button>
-      </div>
-    </div>
+    </>
   );
 };
 
