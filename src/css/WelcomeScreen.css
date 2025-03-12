@@ -2,19 +2,15 @@
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     background: url('/game-screenshot.jpg') center/cover no-repeat;
-    color: #ccc;
+    backdrop-filter: blur(10px);
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
+    z-index: 1000;
     text-align: center;
-    font-family: "Arial", sans-serif;
-    opacity: 0;
-    transform: scale(0.95);
-    transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
 .welcome-screen::before {
@@ -24,7 +20,6 @@
     left: 0;
     width: 100%;
     height: 100%;
-    backdrop-filter: blur(8px);
     z-index: -1;
 }
 
@@ -34,15 +29,15 @@
 }
 
 .welcome-box {
-    background: rgba(20, 20, 20, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    padding: 20px;
-    border-radius: 15px;
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
     width: 90%;
-    max-width: 500px;
+    max-width: 400px;
+    margin: 10px;
 }
 
 .welcome-box-header {
@@ -105,10 +100,6 @@
 
 /* 📱 Mobile Optimizations */
 @media (max-width: 768px) {
-    .welcome-box {
-        padding: 15px;
-        width: 95%;
-    }
 
     .button-container {
         flex-direction: row;
