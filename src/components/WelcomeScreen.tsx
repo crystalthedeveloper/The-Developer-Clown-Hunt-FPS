@@ -38,7 +38,7 @@ const WelcomeScreen: React.FC<{ onStart: () => void; userName: string | null }> 
 
         {/* Always Visible Controls Section */}
         <div className="controls fade-in">
-          <h2>🎮 Controls:</h2>
+          <h2 className="controls-header">🎮 Controls:</h2>
           <p>⬆️⬇️⬅️➡️ / WASD → Move</p>
           <p>🔫 Spacebar → Shoot</p>
           <p>🖱️ Click → Shoot</p>

@@ -99,6 +99,10 @@
     margin-top: 20px;
 }
 
+.controls-header {
+    color: #ffd700;
+}
+
 /* 📱 Mobile Optimizations */
 @media (max-width: 768px) {
     .welcome-screen {
@@ -109,7 +113,8 @@
     .welcome-box {
         width: 95%;
         padding: 20px;
-        max-height: 85vh; /* Allows scrolling without cut-off */
+        max-height: 85vh;
+        /* Allows scrolling without cut-off */
     }
 
     .welcome-box-header {
