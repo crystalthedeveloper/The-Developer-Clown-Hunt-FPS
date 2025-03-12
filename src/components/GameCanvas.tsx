@@ -163,7 +163,7 @@ function GameCanvas() {
             <Scoreboard />
             <Canvas shadows camera={{ position: [0, 10, 25], fov: 50 }} style={{ height: "100%", width: "100%" }}>
                 <Suspense fallback={<Html center>Loading...</Html>}>
-                    <Environment preset="studio" background backgroundBlurriness={0.5} />
+                    <Environment preset="studio" background backgroundBlurriness={0.3} />
                     <Physics gravity={[0, -50, 0]}>
                         <Player ref={playerRef} bulletsRef={bulletsRef} onDie={() => setGameOver("lose")} />
                         <Ground size={[groundSize, groundSize]} />
