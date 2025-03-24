@@ -106,12 +106,16 @@
 /* 📱 Mobile Optimizations */
 @media (max-width: 768px) {
     .game-menu {
-        background: url('/game-screenshot-mobile.jpg') center/cover no-repeat;
+        background:
+            image-set(url('/game-screenshot-mobile.webp') type('image/webp'),
+                url('/game-screenshot-mobile.jpg') type('image/jpeg')) center/cover no-repeat;
+
     }
 
     .game-menu-content {
         width: 95%;
-        max-height: 85vh; /* Allows better scrolling */
+        max-height: 85vh;
+        /* Allows better scrolling */
         padding: 20px;
     }
 

@@ -4,7 +4,10 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: url('/game-screenshot.jpg') center/cover no-repeat;
+    background:
+        image-set(url('/game-screenshot.webp') type('image/webp'),
+            url('/game-screenshot.jpg') type('image/jpeg')) center/cover no-repeat;
+
     backdrop-filter: blur(10px);
     display: flex;
     align-items: center;
@@ -105,7 +108,9 @@
 /* 📱 Mobile Optimizations */
 @media (max-width: 768px) {
     .welcome-screen {
-        background: url('/game-screenshot-mobile.jpg') center/cover no-repeat;
+        background:
+            image-set(url('/game-screenshot-mobile.webp') type('image/webp'),
+                url('/game-screenshot-mobile.jpg') type('image/jpeg')) center/cover no-repeat;
         padding: 5px;
     }
 
