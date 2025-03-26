@@ -15,23 +15,29 @@ interface GameMenuProps {
   saving: boolean;
 }
 
+// Helper to format seconds into MM:SS
+const formatPlayTime = (seconds: number): string => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+};
+
 export function GameMenu({ title, onSave, onRestart, onVisitPortfolio, isVisible, saving }: GameMenuProps) {
-  const [error, setError] = useState(""); // Error state for saving issues
-  const [statusMessage, setStatusMessage] = useState(""); // Message under the button
+  const [error, setError] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
 
   if (!isVisible) return null;
 
   const score = useGameStore((state) => state.score);
   const kills = useGameStore((state) => state.kills);
-  const gameResult = title.includes("Win") ? "win" : "lose"; // ✅ Determine game result from title
+  const playTime = useGameStore((state) => state.playTime);
+  const gameResult = title.includes("Win") ? "win" : "lose";
 
-  // Handle Save with Error Handling
   const handleSave = async () => {
     setError("");
     setStatusMessage("💾 Saving...");
-
     try {
-      await onSave(gameResult); // ✅ Pass Win/Lose to save function
+      await onSave(gameResult);
       setStatusMessage("✅ Game saved successfully!");
     } catch (err: any) {
       if (err.message.includes("403")) {
@@ -53,25 +59,25 @@ export function GameMenu({ title, onSave, onRestart, onVisitPortfolio, isVisible
           {gameResult === "win" ? "🎉 Congratulations!" : "👻 Try again!"}
         </p>
 
-        {/* Score & Kills Display */}
+        {/* Game Summary */}
         <div className="game-stats">
           <p>🏆 Score: <strong className="brand">{score}</strong></p>
           <p>💀 Kills: <strong className="brand">{kills}</strong></p>
+          <p>🕒 Time Played: <strong className="brand">{formatPlayTime(playTime)}</strong></p>
           <p>🎮 Result: <strong className="brand">{gameResult === "win" ? "😁 Victory!" : "Defeat"}</strong></p>
         </div>
 
-        {/* Buttons Side by Side */}
+        <button className="menu-button restart" onClick={onRestart}>🔄 Restart</button>
+
         <div className="menu-buttons">
           <button className="menu-button save" onClick={handleSave} disabled={saving}>
             {saving ? "💾 Saving..." : "💾 Save"}
           </button>
-          <button className="menu-button restart" onClick={onRestart}>🔄 Restart</button>
           <button className="menu-button portfolio" onClick={onVisitPortfolio}>
             🏢 Corporate Site
           </button>
         </div>
 
-        {/* Status and Error Messages Below Buttons */}
         {statusMessage && <p className="status-message">{statusMessage}</p>}
         {error && <p className="error-message">{error}</p>}
       </div>

@@ -1,13 +1,12 @@
 // components/Clown.tsx
-// This component represents a Clown character that chases the player. It uses physics and animations 
-// to handle the movement and interactions (such as being hit by bullets or catching the player).
-
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { useAnimations } from "@react-three/drei";
 import { useEffect, useRef, useMemo, useState } from "react";
 import { useBox } from "@react-three/cannon";
 import * as THREE from "three";
 import { PlayerRef } from "./Player";
+
+const bloodTexture = new THREE.TextureLoader().load("/blood-splatter.png");
 
 interface ClownProps {
   id: number;
@@ -32,7 +31,7 @@ export function Clown({
 }: ClownProps) {
   const clownRef = useRef<THREE.Group>(null);
   const isDyingRef = useRef(false);
-  const prevDirectionRef = useRef(new THREE.Vector3());
+  const { camera, scene } = useThree();
 
   const [isAlive, setIsAlive] = useState(true);
   const [isRunning, setIsRunning] = useState(false);
@@ -40,9 +39,9 @@ export function Clown({
   const [isAIActive, setIsAIActive] = useState(false);
   const [isGameOverTriggered, setIsGameOverTriggered] = useState(false);
 
-  // Clone model and process skeleton/offsets
   const { clonedScene, height } = useMemo(() => {
     const clone = model.clone(true);
+
     const bonesMap: Record<string, THREE.Bone> = {};
     const skinnedMeshes: THREE.SkinnedMesh[] = [];
 
@@ -54,38 +53,39 @@ export function Clown({
     skinnedMeshes.forEach((mesh) => {
       mesh.frustumCulled = false;
       if (mesh.skeleton) {
-        const updatedBones = mesh.skeleton.bones.map((bone) => bonesMap[bone.name] || bone);
-        mesh.skeleton = new THREE.Skeleton(updatedBones);
+        mesh.skeleton = new THREE.Skeleton(
+          mesh.skeleton.bones.map((bone) => bonesMap[bone.name] || bone)
+        );
       }
     });
 
     const box = new THREE.Box3().setFromObject(clone);
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
+    clone.position.sub(center); // center pivot
 
-    clone.position.sub(center); // Recenter the model
     return { clonedScene: clone, height: size.y };
   }, [model]);
 
   const { actions } = useAnimations(animations, clonedScene);
 
-  // Physics Collider
   const [apiRef, api] = useBox(() => ({
     mass: 1,
-    position: [
-      position[0], 
-      position[1] + height / 2 + 1.0, // Adjusted position for better alignment above the ground
-      position[2],
-    ], 
+    position: [position[0], position[1] + height / 2 + 1.0, position[2]],
     args: [1, height, 1],
     fixedRotation: true,
-    linearDamping: 0.4,
-    angularDamping: 0.4,
+    linearDamping: 0.6,
+    angularDamping: 0.6,
+    collisionFilterGroup: 1,
+    collisionFilterMask: 1,
   }));
 
-  const playAnimation = (name: string) => {
+  const playAnimation = (name: string, speed = 1) => {
     Object.values(actions).forEach((action) => action?.fadeOut(0.2));
-    actions[name]?.reset().fadeIn(0.2).play();
+    const selected = actions[name];
+    if (selected) {
+      selected.reset().fadeIn(0.2).setEffectiveTimeScale(speed).play();
+    }
   };
 
   useEffect(() => {
@@ -100,30 +100,39 @@ export function Clown({
     };
   }, []);
 
-  // Sync clown model position with physics collider
   useEffect(() => {
-    const unsubscribe = api.position.subscribe(([x, y, z]) => {
-      clownRef.current?.position.set(x, y, z);
+    return api.position.subscribe(([x, y, z]) => {
+      clownRef.current?.position.set(x, Math.max(0.5, y), z);
     });
-
-    return unsubscribe;
   }, [api]);
 
-  useFrame(() => {
-    if (!isAlive || isDyingRef.current || !clownRef.current || !playerRef.current || isGameOverTriggered || !isAIActive) return;
+  useEffect(() => {
+    return () => {
+      Object.values(actions).forEach((action) => action?.stop());
+    };
+  }, [actions]);
 
-    const clownObject = clownRef.current;
-    const clownPos = clownObject.position;
+  useFrame(() => {
+    if (
+      !isAlive ||
+      isDyingRef.current ||
+      !clownRef.current ||
+      !playerRef.current ||
+      isGameOverTriggered ||
+      !isAIActive
+    )
+      return;
+
+    const clown = clownRef.current;
+    const clownPos = clown.position;
     const playerPos = playerRef.current.getPosition();
     const distance = clownPos.distanceTo(playerPos);
 
-    const chaseDistance = 8;
-    const stopChaseDistance = 25;
-    const catchDistance = 1.5;
-    const runSpeed = 80;
+    clown.rotation.x = 0;
+    clown.rotation.z = 0;
+    clown.lookAt(playerPos);
 
-    // Stop chasing if too far
-    if (distance > stopChaseDistance) {
+    if (distance > 20) {
       if (isRunning) {
         setIsRunning(false);
         playAnimation("idle");
@@ -132,20 +141,13 @@ export function Clown({
       return;
     }
 
-    // Chase player
-    if (distance <= chaseDistance) {
-      const direction = new THREE.Vector3().subVectors(playerPos, clownPos).normalize();
-
-      if (!direction.equals(prevDirectionRef.current)) {
-        clownObject.lookAt(playerPos);
-        prevDirectionRef.current.copy(direction);
-      }
-
-      api.velocity.set(direction.x * runSpeed, 0, direction.z * runSpeed);
+    if (distance <= 10) {
+      const dir = new THREE.Vector3().subVectors(playerPos, clownPos).normalize();
+      api.velocity.set(dir.x * 90, 0, dir.z * 96);
 
       if (!isRunning) {
         setIsRunning(true);
-        playAnimation("run");
+        playAnimation("run", 1.3);
       }
     } else {
       if (isRunning) {
@@ -155,43 +157,60 @@ export function Clown({
       api.velocity.set(0, 0, 0);
     }
 
-    // Catch player
-    if (distance < catchDistance && canCatch && !isGameOverTriggered) {
+    if (distance < 1.5 && canCatch && !isGameOverTriggered) {
       setIsGameOverTriggered(true);
       api.velocity.set(0, 0, 0);
       playAnimation("idle");
       onCatch();
     }
 
-    // Check for bullet collision
-    const clownBox = new THREE.Box3().setFromObject(clownObject);
+    const clownBox = new THREE.Box3().setFromObject(clown);
     bulletsRef.current.forEach((bullet, index) => {
       const bulletPos = new THREE.Vector3().setFromMatrixPosition(bullet.matrixWorld);
       if (clownBox.containsPoint(bulletPos)) {
         isDyingRef.current = true;
         setIsAlive(false);
-
         api.velocity.set(0, 0, 0);
-        clownObject.removeFromParent();
-        apiRef.current?.removeFromParent();
+
+        const blood = new THREE.Mesh(
+          new THREE.PlaneGeometry(1, 1),
+          new THREE.MeshBasicMaterial({
+            map: bloodTexture,
+            transparent: true,
+            depthWrite: false,
+          })
+        );
+
+        blood.rotation.z = Math.random() * Math.PI;
+        blood.scale.setScalar(1.5 + Math.random());
+        blood.position.copy(bulletPos);
+        blood.lookAt(camera.position);
+        scene.add(blood);
+
+        setTimeout(() => {
+          blood.removeFromParent();
+          blood.geometry.dispose();
+          (blood.material as THREE.Material).dispose();
+        }, 100);
 
         bullet.geometry.dispose();
         bullet.removeFromParent();
         bulletsRef.current.splice(index, 1);
 
-        setTimeout(() => onKill(id), 50);
+        setTimeout(() => {
+          clown.removeFromParent();
+          apiRef.current?.removeFromParent();
+          onKill(id);
+        }, 100);
       }
     });
   });
 
-  // Stop animations on cleanup
-  useEffect(() => {
-    return () => Object.values(actions).forEach((action) => action?.stop());
-  }, [actions]);
-
   return isAlive ? (
     <group ref={clownRef}>
-      <primitive object={clonedScene} />
+      <group rotation={[-Math.PI / 14, 0, 0]}>
+        <primitive object={clonedScene} />
+      </group>
     </group>
   ) : null;
 }

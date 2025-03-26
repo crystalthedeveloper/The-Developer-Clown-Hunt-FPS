@@ -8,6 +8,10 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { PlayerRef } from "./Player";
 
+// ✅ Load logo collection sound
+const logoSound = new Audio("/logo.mp3");
+logoSound.volume = 0.7;
+
 interface LogoItemProps {
   playerRef: React.RefObject<PlayerRef>;
   position: [number, number, number];
@@ -84,11 +88,16 @@ export function LogoItem({
 
     if (logoPos.distanceTo(playerPos) < 1.5) {
       isCollected.current = true;
+
+      // ✅ Play sound
+      logoSound.currentTime = 0;
+      logoSound.play();
+
       onCollect();
 
       api.position.set(0, -100, 0); // Move the logo out of the view
-      api.mass.set(0); // Remove mass so it doesn't react to physics anymore
-      ref.current.visible = false; // Hide the logo
+      api.mass.set(0);              // Remove mass so it doesn't react to physics anymore
+      ref.current.visible = false;  // Hide the logo
     }
   });
 

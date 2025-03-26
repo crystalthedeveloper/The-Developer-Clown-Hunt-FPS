@@ -2,7 +2,7 @@
 .controls-container {
   position: absolute;
   bottom: 20px;
-  left: 40px;
+  left: 100px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -32,7 +32,7 @@
 .shoot-container {
   position: absolute;
   bottom: 54px;
-  right: 30px;
+  right: 100px;
   z-index: 1000;
 }
 
@@ -44,7 +44,7 @@
   border: none;
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 .shoot-container button:hover {
@@ -54,4 +54,21 @@
 
 .shoot-container button:active {
   transform: scale(0.95);
+}
+
+/* 📱 Mobile Optimizations */
+@media (max-width: 768px) {
+
+  /* Controls (Left Side) */
+  .controls-container {
+    left: 50px;
+
+  }
+
+  /* Shooting Button (Right Side) */
+  .shoot-container {
+    right: 50px;
+
+  }
+
 }

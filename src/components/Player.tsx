@@ -2,11 +2,15 @@
 // This component defines the player character in a 3D game. The player is represented as a sphere and controlled by physics through react-three/fiber and react-three/cannon.
 // It handles player movement, shooting, collision detection with clowns, fall detection, and bullet management.
 
-import { forwardRef, useImperativeHandle } from "react";
+// components/Player.tsx
+import { forwardRef, useImperativeHandle, useEffect, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useSphere } from "@react-three/cannon";
 import * as THREE from "three";
 import { useGameStore } from "../store/store";
+
+const shootSound = new Audio("/single-shot.mp3");
+shootSound.volume = 0.6;
 
 export interface PlayerRef {
   shoot: () => void;
@@ -22,6 +26,8 @@ export const Player = forwardRef<PlayerRef, PlayerProps>(
   ({ onDie, bulletsRef }, ref) => {
     const { velocity, rotation, clownData } = useGameStore();
     const { camera, scene } = useThree();
+
+    const aimDotRef = useRef<THREE.Mesh | null>(null);
 
     const [playerBodyRef, api] = useSphere<THREE.Mesh>(() => ({
       mass: 1,
@@ -41,6 +47,21 @@ export const Player = forwardRef<PlayerRef, PlayerProps>(
         return playerPosition;
       },
     }));
+
+    useEffect(() => {
+      const aimDot = new THREE.Mesh(
+        new THREE.SphereGeometry(0.008, 8, 8),
+        new THREE.MeshBasicMaterial({ color: "yellow", depthTest: false })
+      );
+      aimDotRef.current = aimDot;
+      scene.add(aimDot);
+
+      return () => {
+        scene.remove(aimDot);
+        aimDot.geometry.dispose();
+        (aimDot.material as THREE.Material).dispose();
+      };
+    }, [scene]);
 
     useFrame(() => {
       if (!playerBodyRef.current) return;
@@ -63,6 +84,14 @@ export const Player = forwardRef<PlayerRef, PlayerProps>(
         .add(camera.position);
       camera.lookAt(cameraTarget);
 
+      if (aimDotRef.current) {
+        const aimDir = new THREE.Vector3();
+        camera.getWorldDirection(aimDir);
+        const dotPosition = camera.position.clone().add(aimDir.multiplyScalar(2));
+        aimDotRef.current.position.copy(dotPosition);
+        aimDotRef.current.lookAt(camera.position);
+      }
+
       if (velocity.z === 0 && velocity.x === 0) {
         api.angularVelocity.set(0, 0, 0);
       }
@@ -79,29 +108,39 @@ export const Player = forwardRef<PlayerRef, PlayerProps>(
         }
       });
 
-      // ✅ Handle bullet movement inside `useFrame()`
+      // ✅ Bullet update with realistic distance cap
       bulletsRef.current.forEach((bullet, index) => {
         bullet.position.add(bullet.userData.velocity);
 
-        if (bullet.position.length() > 100) {
+        // Track traveled distance
+        bullet.userData.travelled = (bullet.userData.travelled || 0) + bullet.userData.velocity.length();
+
+        // Remove if bullet goes too far
+        if (bullet.userData.travelled > 10) {
           scene.remove(bullet);
+          bullet.geometry.dispose();
+          (bullet.material as THREE.Material).dispose();
           bulletsRef.current.splice(index, 1);
         }
       });
     });
 
     const shoot = () => {
+      shootSound.currentTime = 0;
+      shootSound.play();
+
       const bullet = new THREE.Mesh(
-        new THREE.SphereGeometry(0.1, 8, 8),
-        new THREE.MeshStandardMaterial({ color: "yellow" })
+        new THREE.SphereGeometry(0.2, 8, 8),
+        new THREE.MeshStandardMaterial({ color: "black" })
       );
 
       const cameraDirection = new THREE.Vector3();
       camera.getWorldDirection(cameraDirection);
 
-      const bulletStartPosition = camera.position.clone().add(cameraDirection.clone().multiplyScalar(0.8));
+      const bulletStartPosition = camera.position.clone().add(cameraDirection.clone().multiplyScalar(0.2));
       bullet.position.copy(bulletStartPosition);
-      bullet.userData.velocity = cameraDirection.clone().multiplyScalar(1.5);
+      bullet.userData.velocity = cameraDirection.clone().multiplyScalar(1); // Slower, more realistic
+      bullet.userData.travelled = 0;
 
       scene.add(bullet);
       bulletsRef.current.push(bullet);
