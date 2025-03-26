@@ -77,6 +77,20 @@
     margin-bottom: 10px;
 }
 
+/* Button Styles */
+.save  {
+    padding: 12px 18px;
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 8px;
+    background: rgba(30, 60, 30, 0.9);
+    color: white;
+    border: 1px solid #555;
+    transition: all 0.3s ease;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
 .menu-button:hover {
     background: rgba(50, 50, 50, 1);
     transform: scale(1.05);
