@@ -28,7 +28,10 @@ function App() {
       if (loggedInUser) {
         setUser({
           id: loggedInUser.id,
-          fullName: loggedInUser.user_metadata?.full_name || "Player", // ✅ Ensure fullName is set
+          fullName:
+            loggedInUser.user_metadata?.full_name ||
+            `${loggedInUser.user_metadata?.first_name || ""} ${loggedInUser.user_metadata?.last_name || ""}`.trim() ||
+            "Player",
           app_metadata: loggedInUser.app_metadata,
           user_metadata: loggedInUser.user_metadata,
           aud: loggedInUser.aud,
@@ -44,13 +47,11 @@ function App() {
   useEffect(() => {
     const preventZoom = (event: TouchEvent) => {
       if (event.touches.length > 1) {
-        event.preventDefault(); // Prevent pinch zoom
+        event.preventDefault();
       }
     };
 
-    const preventGestureZoom = (event: Event) => {
-      event.preventDefault(); // Prevent iOS Safari gesture zooming
-    };
+    const preventGestureZoom = (event: Event) => event.preventDefault();
 
     document.addEventListener("touchstart", preventZoom, { passive: false });
     document.addEventListener("gesturestart", preventGestureZoom);
@@ -65,14 +66,15 @@ function App() {
     };
   }, []);
 
-  // ✅ Show LoginScreen if user is not authenticated
   if (!user) {
     return <LoginScreen onLoginSuccess={setUser} />;
   }
 
   return (
     <>
-      {!gameStarted && !loading && <WelcomeScreen onStart={() => setGameStarted(true)} userName={user.fullName} />}
+      {!gameStarted && !loading && (
+        <WelcomeScreen userName={user.fullName} onStart={() => setGameStarted(true)} />
+      )}
       {gameStarted && <GameCanvas />}
     </>
   );
