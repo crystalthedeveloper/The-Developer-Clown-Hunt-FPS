@@ -1,5 +1,4 @@
 // components/GameCanvas.tsx
-// components/GameCanvas.tsx
 import { useRef, useEffect, useState, Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Physics } from "@react-three/cannon";
@@ -59,33 +58,26 @@ function GameCanvas() {
   };
 
   useEffect(() => {
-    let interval: number;
     if (!isGameOver) {
       setPlayTime(0);
-      interval = window.setInterval(() => {
-        useGameStore.setState((state) => ({
-          playTime: state.playTime + 1,
-        }));
+      const interval = window.setInterval(() => {
+        useGameStore.setState((state) => ({ playTime: state.playTime + 1 }));
       }, 1000);
+      return () => clearInterval(interval);
     }
-    return () => clearInterval(interval);
   }, [isGameOver]);
 
   useEffect(() => {
     resetGame();
 
-    const logoPositions = generateUniquePositions(totalLogos, 5, 5, 0);
-    const blackBoxPositions = generateUniquePositions(totalBlackBoxes, 5, 5, 0, logoPositions);
-    const dieBoxPositions = generateUniquePositions(totalDieBoxes, 5, 5, 0, [...logoPositions, ...blackBoxPositions]);
-    const clownPositions = generateUniquePositions(totalClowns, 15, 5, 0, [
-      ...logoPositions,
-      ...blackBoxPositions,
-      ...dieBoxPositions,
-    ]);
+    const logos = generateUniquePositions(totalLogos, 5, 5, 0);
+    const blackBoxes = generateUniquePositions(totalBlackBoxes, 5, 5, 0, logos);
+    const dieBoxes = generateUniquePositions(totalDieBoxes, 5, 5, 0, [...logos, ...blackBoxes]);
+    const clowns = generateUniquePositions(totalClowns, 15, 5, 0, [...logos, ...blackBoxes, ...dieBoxes], 1);
 
-    setLogoPositions(logoPositions);
+    setLogoPositions(logos);
     setClownData(
-      clownPositions.map((pos, index) => ({
+      clowns.map((pos, index) => ({
         id: index,
         position: pos,
         isAlive: true,
@@ -98,12 +90,13 @@ function GameCanvas() {
     minDistanceFromPlayer = 5,
     minDistanceBetweenObjects = 5,
     yPosition = 0,
-    existingObjects: [number, number, number][] = []
+    existingObjects: [number, number, number][] = [],
+    minVerticalDistance = 1
   ): [number, number, number][] => {
     const positions: [number, number, number][] = [];
 
-    const distance2D = (a: [number, number, number], b: [number, number, number]) =>
-      Math.hypot(a[0] - b[0], a[2] - b[2]);
+    const distance3D = (a: [number, number, number], b: [number, number, number]) =>
+      Math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2);
 
     for (let i = 0; i < count; i++) {
       let attempts = 0;
@@ -116,18 +109,15 @@ function GameCanvas() {
           Math.random() * groundSize - groundSize / 2,
         ];
 
-        const tooCloseToPlayer = distance2D(position, playerStartPosition) < minDistanceFromPlayer;
-        const tooCloseToOthers = [...positions, ...existingObjects].some(
-          (existing) => distance2D(existing, position) < minDistanceBetweenObjects
-        );
+        const tooCloseToPlayer = distance3D(position, playerStartPosition) < minDistanceFromPlayer;
+        const tooCloseToOthers = [...positions, ...existingObjects].some((existing) => {
+          const closeXY = distance3D(existing, position) < minDistanceBetweenObjects;
+          const overlapY = Math.abs(existing[1] - position[1]) < minVerticalDistance;
+          return closeXY && overlapY;
+        });
 
         if (!tooCloseToPlayer && !tooCloseToOthers) break;
-
-        attempts++;
-        if (attempts > 1000) {
-          console.warn("⚠️ Could not find suitable position after many attempts");
-          break;
-        }
+        if (++attempts > 1000) break;
       } while (true);
 
       positions.push(position);
@@ -144,9 +134,15 @@ function GameCanvas() {
 
   const handleRestart = () => {
     resetGame();
-    setLogoPositions(generateUniquePositions(totalLogos, 5, 5, 0));
+
+    const logos = generateUniquePositions(totalLogos, 5, 5, 0);
+    const blackBoxes = generateUniquePositions(totalBlackBoxes, 5, 5, 0, logos);
+    const dieBoxes = generateUniquePositions(totalDieBoxes, 5, 5, 0, [...logos, ...blackBoxes]);
+    const clowns = generateUniquePositions(totalClowns, 15, 5, 0, [...logos, ...blackBoxes, ...dieBoxes], 1);
+
+    setLogoPositions(logos);
     setClownData(
-      generateUniquePositions(totalClowns, 15, 5, 0).map((pos, index) => ({
+      clowns.map((pos, index) => ({
         id: index,
         position: pos,
         isAlive: true,
