@@ -64,9 +64,9 @@ export function GameMenu({
         </p>
 
         <div className="game-stats">
-          <p>✨ Logo Points: <strong className="brand">{logoScore}</strong></p>
-          <p>💥 Kill Points: <strong className="brand">{killScore}</strong></p>
-          <p>🕒 Time Played: <strong className="brand">{formatPlayTime(playTime)}</strong></p>
+        <p>🕒 Time: <strong className="brand">{formatPlayTime(playTime)}</strong></p>
+          <p>✨ Logos: <strong className="brand">{logoScore}</strong></p>
+          <p>💥 Clowns: <strong className="brand">{killScore}</strong></p>
           <p>🎮 Result: <strong className="brand">{gameResult === "win" ? "😁 Victory!" : "Defeat"}</strong></p>
         </div>
 

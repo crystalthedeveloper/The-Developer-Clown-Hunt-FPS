@@ -44,7 +44,7 @@ const Scoreboard = () => {
       </div>
 
       <div className="scoreboard-text">
-        Kills:{" "}
+        Clowns:{" "}
         <div className="scoreboard-number">{killScore}</div>
       </div>
     </div>
