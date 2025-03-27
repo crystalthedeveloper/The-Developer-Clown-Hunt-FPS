@@ -5,6 +5,7 @@
 import React, { useRef, useMemo } from "react";
 import { useBox } from "@react-three/cannon";
 import { useFrame } from "@react-three/fiber";
+import { Text } from "@react-three/drei"; // ✅ Add this
 import * as THREE from "three";
 import { PlayerRef } from "./Player";
 
@@ -29,7 +30,6 @@ export function LogoItem({
 }: LogoItemProps) {
   const isCollected = useRef(false);
 
-  // Clone the logo model and set up its position, size, and scaling
   const clonedLogo = useMemo(() => {
     const clone = model.clone(true);
 
@@ -42,7 +42,7 @@ export function LogoItem({
 
     const selectedChild = validChildren[logoIndex];
     if (!selectedChild) {
-      return new THREE.Group(); // Return an empty group if the logo is not found
+      return new THREE.Group();
     }
 
     const wrapper = new THREE.Group();
@@ -57,13 +57,11 @@ export function LogoItem({
 
     wrapper.position.sub(center);
 
-    // Scale to fit the collider box (0.8)
     const scaleFactor = 0.8 / Math.max(size.x, size.y, size.z);
     wrapper.scale.setScalar(scaleFactor);
 
-    // After scaling, recalculate height and center it inside the box
     const adjustedHeight = size.y * scaleFactor;
-    wrapper.position.y += (0.4 - adjustedHeight) / 2; // Center in 0.8 box
+    wrapper.position.y += (0.4 - adjustedHeight) / 2;
 
     return wrapper;
   }, [model, logoIndex]);
@@ -89,20 +87,32 @@ export function LogoItem({
     if (logoPos.distanceTo(playerPos) < 1.5) {
       isCollected.current = true;
 
-      // ✅ Play sound
       logoSound.currentTime = 0;
       logoSound.play();
 
       onCollect();
 
-      api.position.set(0, -100, 0); // Move the logo out of the view
-      api.mass.set(0);              // Remove mass so it doesn't react to physics anymore
-      ref.current.visible = false;  // Hide the logo
+      api.position.set(0, -100, 0);
+      api.mass.set(0);
+      ref.current.visible = false;
     }
   });
 
   return !isCollected.current ? (
     <group ref={ref} castShadow receiveShadow>
+      {/* Floating gold points label */}
+      <Text
+        position={[0, 0.6, 0]}
+        fontSize={0.2}
+        color="gold"
+        anchorX="center"
+        anchorY="middle"
+        outlineWidth={0.015}
+        outlineColor="black"
+      >
+        +40
+      </Text>
+
       <primitive object={clonedLogo} />
     </group>
   ) : null;

@@ -1,8 +1,4 @@
 // store/store.ts
-// This file defines the global game state using Zustand, including the player's velocity, rotation, score, kills, and other game-related data.
-// It provides methods to update and manipulate this state, such as setting velocity, rotating the player, increasing score and kills, and managing game progress.
-
-// store/store.ts
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 
@@ -23,7 +19,6 @@ interface PlayerState {
 }
 
 interface GameState {
-  score: number;
   kills: number;
   collectedLogos: number;
   totalLogos: number;
@@ -39,9 +34,14 @@ interface GameState {
   logoPositions: Position[];
   playTime: number;
 
+  // Computed scores
+  logoScore: number;
+  killScore: number;
+
+  // Actions
   setGameOver: (result: "win" | "lose") => void;
-  increaseScore: (points: number) => void;
   increaseKills: () => void;
+  increaseLogos: () => void;
   setCollectedLogos: (count: number | ((prev: number) => number)) => void;
   setClownData: (clowns: Clown[] | ((prev: Clown[]) => Clown[])) => void;
   setLogoPositions: (positions: Position[]) => void;
@@ -51,7 +51,7 @@ interface GameState {
 }
 
 export const useGameStore = create<PlayerState & GameState>()(
-  subscribeWithSelector((set) => ({
+  subscribeWithSelector((set, get) => ({
     velocity: { x: 0, z: 0 },
     rotation: 0,
 
@@ -63,7 +63,6 @@ export const useGameStore = create<PlayerState & GameState>()(
     totalLogos: 25,
     totalClowns: 50,
 
-    score: 0,
     kills: 0,
     collectedLogos: 0,
     isGameOver: false,
@@ -71,6 +70,14 @@ export const useGameStore = create<PlayerState & GameState>()(
     clownData: [],
     logoPositions: [],
     playTime: 0,
+
+    // Computed values
+    get logoScore() {
+      return get().collectedLogos * 40;
+    },
+    get killScore() {
+      return get().kills * 20;
+    },
 
     setVelocity: (x, z) => set(() => ({ velocity: { x, z } })),
     setRotation: (rotationOrUpdater) =>
@@ -90,13 +97,14 @@ export const useGameStore = create<PlayerState & GameState>()(
         rotation: 0,
       })),
 
-    increaseScore: (points) =>
-      set((state) => ({ score: state.score + points })),
-
     increaseKills: () =>
       set((state) => ({
         kills: state.kills + 1,
-        score: state.score + 20,
+      })),
+
+    increaseLogos: () =>
+      set((state) => ({
+        collectedLogos: state.collectedLogos + 1,
       })),
 
     setCollectedLogos: (valueOrUpdater) =>
@@ -108,7 +116,6 @@ export const useGameStore = create<PlayerState & GameState>()(
 
         return {
           collectedLogos: newCount,
-          score: state.score + 40,
           isGameOver: newCount >= state.totalLogos,
           gameResult: newCount >= state.totalLogos ? "win" : state.gameResult,
         };
@@ -136,7 +143,6 @@ export const useGameStore = create<PlayerState & GameState>()(
 
     resetGame: () =>
       set((state) => ({
-        score: 0,
         kills: 0,
         collectedLogos: 0,
         isGameOver: false,

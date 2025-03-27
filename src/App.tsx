@@ -5,16 +5,13 @@ import WelcomeScreen from "./components/WelcomeScreen";
 import LoginScreen from "./components/LoginScreen";
 import GameCanvas from "./components/GameCanvas";
 import { SupabaseAuth } from "./store/SupabaseAuth";
+import { getUserName } from "./store/supabaseHelpers"; // 👈 Import the helper
 import "./App.css";
 
-// ✅ Define a type for the user object
+// ✅ Define a simplified type
 interface User {
   id: string;
   fullName: string;
-  app_metadata: Record<string, any>;
-  user_metadata: Record<string, any>;
-  aud: string;
-  confirmation_sent_at?: string;
 }
 
 function App() {
@@ -26,31 +23,23 @@ function App() {
     async function fetchUser() {
       const loggedInUser = await SupabaseAuth.getUser();
       if (loggedInUser) {
+        const fullName = await getUserName(); // ✅ Get name from users_access table
         setUser({
           id: loggedInUser.id,
-          fullName:
-            loggedInUser.user_metadata?.full_name ||
-            `${loggedInUser.user_metadata?.first_name || ""} ${loggedInUser.user_metadata?.last_name || ""}`.trim() ||
-            "Player",
-          app_metadata: loggedInUser.app_metadata,
-          user_metadata: loggedInUser.user_metadata,
-          aud: loggedInUser.aud,
-          confirmation_sent_at: loggedInUser.confirmation_sent_at,
+          fullName: fullName || "Player",
         });
       }
       setLoading(false);
     }
+
     fetchUser();
   }, []);
 
   // ✅ Prevent zooming on touch and gestures
   useEffect(() => {
     const preventZoom = (event: TouchEvent) => {
-      if (event.touches.length > 1) {
-        event.preventDefault();
-      }
+      if (event.touches.length > 1) event.preventDefault();
     };
-
     const preventGestureZoom = (event: Event) => event.preventDefault();
 
     document.addEventListener("touchstart", preventZoom, { passive: false });
@@ -66,13 +55,15 @@ function App() {
     };
   }, []);
 
+  if (loading) return null;
+
   if (!user) {
-    return <LoginScreen onLoginSuccess={setUser} />;
+    return <LoginScreen onLoginSuccess={() => window.location.reload()} />;
   }
 
   return (
     <>
-      {!gameStarted && !loading && (
+      {!gameStarted && (
         <WelcomeScreen userName={user.fullName} onStart={() => setGameStarted(true)} />
       )}
       {gameStarted && <GameCanvas />}

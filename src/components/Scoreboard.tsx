@@ -12,8 +12,11 @@ const formatTime = (seconds: number): string => {
 };
 
 const Scoreboard = () => {
-  const score = useGameStore((state) => state.score);
+  const collectedLogos = useGameStore((state) => state.collectedLogos);
   const kills = useGameStore((state) => state.kills);
+
+  const logoScore = collectedLogos * 40;
+  const killScore = kills * 20;
 
   const [secondsElapsed, setSecondsElapsed] = useState(0);
 
@@ -29,14 +32,20 @@ const Scoreboard = () => {
       <a href="https://www.crystalthedeveloper.ca">
         <img src="./gold.png" alt="Game Logo" className="scoreboard-logo" />
       </a>
+
       <div className="scoreboard-text">
-        Time: <div className="scoreboard-number">{formatTime(secondsElapsed)}</div>
+        Time:{" "}
+        <div className="scoreboard-number">{formatTime(secondsElapsed)}</div>
       </div>
+
       <div className="scoreboard-text">
-        Score: <div className="scoreboard-number">{score}</div>
+        Logos:{" "}
+        <div className="scoreboard-number">{logoScore}</div>
       </div>
+
       <div className="scoreboard-text">
-        Kills: <div className="scoreboard-number">{kills}</div>
+        Kills:{" "}
+        <div className="scoreboard-number">{killScore}</div>
       </div>
     </div>
   );

@@ -27,7 +27,7 @@ export const Player = forwardRef<PlayerRef, PlayerProps>(
     const { velocity, rotation, clownData } = useGameStore();
     const { camera, scene } = useThree();
 
-    const aimDotRef = useRef<THREE.Mesh | null>(null);
+    const aimDotRef = useRef<THREE.Object3D | null>(null);
 
     const [playerBodyRef, api] = useSphere<THREE.Mesh>(() => ({
       mass: 1,
@@ -49,19 +49,45 @@ export const Player = forwardRef<PlayerRef, PlayerProps>(
     }));
 
     useEffect(() => {
-      const aimDot = new THREE.Mesh(
-        new THREE.SphereGeometry(0.008, 8, 8),
-        new THREE.MeshBasicMaterial({ color: "yellow", depthTest: false })
-      );
-      aimDotRef.current = aimDot;
-      scene.add(aimDot);
+      const color = new THREE.Color(1, 1, 0).multiplyScalar(0.5); // brighter neon yellow
+      const lineMaterial = new THREE.LineBasicMaterial({
+        color,
+        depthTest: false,
+        transparent: true,
+        opacity: 1,
+      });
+
+      const xShapeGeometry1 = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(-0.05, 0.05, 0),
+        new THREE.Vector3(0.05, -0.05, 0),
+      ]);
+
+      const xShapeGeometry2 = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(0.05, 0.05, 0),
+        new THREE.Vector3(-0.05, -0.05, 0),
+      ]);
+
+      const line1 = new THREE.Line(xShapeGeometry1, lineMaterial);
+      const line2 = new THREE.Line(xShapeGeometry2, lineMaterial);
+
+      const cross = new THREE.Group();
+      cross.add(line1);
+      cross.add(line2);
+
+      cross.renderOrder = 999; // ✅ force it on top
+      cross.position.y += 0.001; // ✅ slight offset to prevent z-fighting
+
+      aimDotRef.current = cross;
+      scene.add(cross);
 
       return () => {
-        scene.remove(aimDot);
-        aimDot.geometry.dispose();
-        (aimDot.material as THREE.Material).dispose();
+        scene.remove(cross);
+        xShapeGeometry1.dispose();
+        xShapeGeometry2.dispose();
+        lineMaterial.dispose();
       };
     }, [scene]);
+
 
     useFrame(() => {
       if (!playerBodyRef.current) return;

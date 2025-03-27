@@ -1,10 +1,7 @@
 // components/GameMenu.tsx
-// This component displays the game menu, showing the current game status (win/lose), 
-// the score, and options to save the game, restart, or visit the portfolio.
-
 import { useState } from "react";
 import { useGameStore } from "../store/store";
-import "../css/GameMenu.css"; // Import external CSS
+import "../css/GameMenu.css";
 
 interface GameMenuProps {
   title: string;
@@ -15,39 +12,46 @@ interface GameMenuProps {
   saving: boolean;
 }
 
-// Helper to format seconds into MM:SS
 const formatPlayTime = (seconds: number): string => {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
   return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 };
 
-export function GameMenu({ title, onSave, onRestart, onVisitPortfolio, isVisible, saving }: GameMenuProps) {
+export function GameMenu({
+  title,
+  onSave,
+  onRestart,
+  onVisitPortfolio,
+  isVisible,
+  saving,
+}: GameMenuProps) {
   const [error, setError] = useState("");
-  const [statusMessage, setStatusMessage] = useState("");
+  const [status, setStatus] = useState("");
+
+  const { kills, collectedLogos, playTime } = useGameStore.getState();
+  const gameResult = title.includes("Win") ? "win" : "lose";
+  const logoScore = collectedLogos * 40;
+  const killScore = kills * 20;
 
   if (!isVisible) return null;
 
-  const score = useGameStore((state) => state.score);
-  const kills = useGameStore((state) => state.kills);
-  const playTime = useGameStore((state) => state.playTime);
-  const gameResult = title.includes("Win") ? "win" : "lose";
-
   const handleSave = async () => {
     setError("");
-    setStatusMessage("💾 Saving...");
+    setStatus("💾 Saving...");
     try {
       await onSave(gameResult);
-      setStatusMessage("✅ Game saved successfully!");
+      setStatus("✅ Game saved successfully!");
     } catch (err: any) {
-      if (err.message.includes("403")) {
-        setError("⚠️ Access Denied: You may not have permission to save.");
-      } else if (err.message.includes("500")) {
-        setError("❌ Server Error: Try again later.");
-      } else {
-        setError("❌ Unexpected error while saving. Please try again.");
-      }
-      setStatusMessage("");
+      const msg = err?.message || "";
+      setError(
+        msg.includes("403")
+          ? "⚠️ Access Denied: You may not have permission to save."
+          : msg.includes("500")
+          ? "❌ Server Error: Try again later."
+          : "❌ Unexpected error while saving. Please try again."
+      );
+      setStatus("");
     }
   };
 
@@ -59,10 +63,9 @@ export function GameMenu({ title, onSave, onRestart, onVisitPortfolio, isVisible
           {gameResult === "win" ? "🎉 Congratulations!" : "👻 Try again!"}
         </p>
 
-        {/* Game Summary */}
         <div className="game-stats">
-          <p>🏆 Score: <strong className="brand">{score}</strong></p>
-          <p>💀 Kills: <strong className="brand">{kills}</strong></p>
+          <p>✨ Logo Points: <strong className="brand">{logoScore}</strong></p>
+          <p>💥 Kill Points: <strong className="brand">{killScore}</strong></p>
           <p>🕒 Time Played: <strong className="brand">{formatPlayTime(playTime)}</strong></p>
           <p>🎮 Result: <strong className="brand">{gameResult === "win" ? "😁 Victory!" : "Defeat"}</strong></p>
         </div>
@@ -78,7 +81,7 @@ export function GameMenu({ title, onSave, onRestart, onVisitPortfolio, isVisible
           </button>
         </div>
 
-        {statusMessage && <p className="status-message">{statusMessage}</p>}
+        {status && <p className="status-message">{status}</p>}
         {error && <p className="error-message">{error}</p>}
       </div>
     </div>
