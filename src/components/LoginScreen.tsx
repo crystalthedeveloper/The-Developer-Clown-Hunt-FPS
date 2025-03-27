@@ -1,6 +1,6 @@
 // components/LoginScreen.tsx
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../store/supabaseClient";
 import "../css/LoginScreen.css";
 
@@ -13,6 +13,36 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data?.session) {
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData?.user) {
+          console.log("✅ Auto-login with session");
+          onLoginSuccess(userData.user);
+          return;
+        }
+      }
+      setCheckingSession(false);
+    };
+
+    checkSession();
+
+    // ✅ Listen for auth changes (auto-login after form submission)
+    const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN" && session?.user) {
+        console.log("🎉 Supabase SIGNED_IN event");
+        onLoginSuccess(session.user);
+      }
+    });
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, [onLoginSuccess]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,54 +50,20 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
     setLoading(true);
 
     try {
-      // ✅ Sign in user with Supabase Auth
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error) throw new Error(error.message);
 
-      // ✅ Get logged-in user
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError || !userData?.user) throw new Error("User not found.");
-
-      const userId = userData.user.id;
-      const firstName = userData.user.user_metadata?.first_name || "Unknown";
-      const lastName = userData.user.user_metadata?.last_name || "User";
-
-      // ✅ Step 2: Check if user exists in player_stats
-      const { data: existingPlayer, error: fetchError } = await supabase
-        .from("player_stats")
-        .select("id")
-        .eq("user_id", userId)
-        .single();
-
-      if (fetchError) console.error("Fetch player error:", fetchError.message);
-
-      // ✅ If player doesn't exist, insert into `player_stats`
-      if (!existingPlayer) {
-        const { error: insertError } = await supabase.from("player_stats").insert([
-          {
-            user_id: userId,
-            first_name: firstName,
-            last_name: lastName,
-            score: 0,
-            kills: 0,
-          },
-        ]);
-
-        if (insertError) throw new Error("Failed to create player record.");
-      }
-
-      // ✅ Call success function
-      onLoginSuccess(userData.user);
+      // ❗️DO NOT call onLoginSuccess here directly
+      // Let the auth listener above handle it
     } catch (err: any) {
       setError(`❌ Login failed: ${err.message}`);
     } finally {
       setLoading(false);
     }
   };
+
+  if (checkingSession) return null; // or show a loading spinner
 
   return (
     <div className="login-screen fade-in">
@@ -80,6 +76,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
             placeholder="📧 Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+            autoCapitalize="none"
+            autoFocus
             required
           />
           <input
@@ -97,11 +96,17 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
         {error && <p className="error">{error}</p>}
 
         <div className="button-group">
-          <button className="back-button" onClick={() => window.location.href = "https://www.crystalthedeveloper.ca/"}>
+          <button
+            className="back-button"
+            onClick={() => (window.location.href = "https://www.crystalthedeveloper.ca/")}
+          >
             🔙 Back to Home
           </button>
 
-          <button className="next-button" onClick={() => window.location.href = "https://www.crystalthedeveloper.ca/user-pages/signup"}>
+          <button
+            className="next-button"
+            onClick={() => (window.location.href = "https://www.crystalthedeveloper.ca/user-pages/signup")}
+          >
             🖊️ Sign Up
           </button>
         </div>

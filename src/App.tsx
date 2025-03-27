@@ -5,10 +5,9 @@ import WelcomeScreen from "./components/WelcomeScreen";
 import LoginScreen from "./components/LoginScreen";
 import GameCanvas from "./components/GameCanvas";
 import { SupabaseAuth } from "./store/SupabaseAuth";
-import { getUserName } from "./store/supabaseHelpers"; // 👈 Import the helper
+import { getUserName } from "./store/supabaseHelpers";
 import "./App.css";
 
-// ✅ Define a simplified type
 interface User {
   id: string;
   fullName: string;
@@ -19,11 +18,12 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [gameStarted, setGameStarted] = useState(false);
 
+  // ✅ Initial session check (on mount)
   useEffect(() => {
     async function fetchUser() {
       const loggedInUser = await SupabaseAuth.getUser();
       if (loggedInUser) {
-        const fullName = await getUserName(); // ✅ Get name from users_access table
+        const fullName = await getUserName();
         setUser({
           id: loggedInUser.id,
           fullName: fullName || "Player",
@@ -35,7 +35,7 @@ function App() {
     fetchUser();
   }, []);
 
-  // ✅ Prevent zooming on touch and gestures
+  // ✅ Prevent zooming (touch devices)
   useEffect(() => {
     const preventZoom = (event: TouchEvent) => {
       if (event.touches.length > 1) event.preventDefault();
@@ -55,18 +55,28 @@ function App() {
     };
   }, []);
 
+  // ✅ After login, update user + skip reload
+  const handleLoginSuccess = async (supabaseUser: any) => {
+    const fullName = await getUserName();
+    setUser({
+      id: supabaseUser.id,
+      fullName: fullName || "Player",
+    });
+  };
+
   if (loading) return null;
 
   if (!user) {
-    return <LoginScreen onLoginSuccess={() => window.location.reload()} />;
+    return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
   }
 
   return (
     <>
-      {!gameStarted && (
+      {!gameStarted ? (
         <WelcomeScreen userName={user.fullName} onStart={() => setGameStarted(true)} />
+      ) : (
+        <GameCanvas />
       )}
-      {gameStarted && <GameCanvas />}
     </>
   );
 }
