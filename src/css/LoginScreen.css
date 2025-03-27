@@ -72,7 +72,7 @@ input::placeholder {
 /* Login Button */
 .login-button {
     width: 100%;
-    background: rgba(30, 30, 30, 0.7);
+    background: rgba(30, 60, 30, 0.9);
     border: 1px solid #555;
     padding: 12px;
     font-size: 1.2rem;
@@ -119,7 +119,7 @@ input::placeholder {
     border-radius: 8px;
     color: #ddd;
     transition: 0.3s;
-    margin-top: 20px;
+    margin-top: 30px;
     width: 100%;
 }
 
@@ -157,11 +157,6 @@ input::placeholder {
     .login-button {
         font-size: 1.1rem;
         padding: 12px;
-    }
-
-    .button-group {
-        flex-direction: column;
-        gap: 0px;
     }
 
     .back-button,
