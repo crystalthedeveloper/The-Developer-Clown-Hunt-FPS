@@ -28,12 +28,6 @@ const WelcomeScreen: React.FC<{ onStart: () => void; userName: string | null }> 
           <button className="play-button" onClick={handleStart}>
             🎯 PLAY
           </button>
-          <button
-            className="corporate-button"
-            onClick={() => window.open("https://www.crystalthedeveloper.ca/", "_blank")}
-          >
-            🏢 Corporate Site
-          </button>
         </div>
 
         {/* Always Visible Controls Section */}
@@ -42,7 +36,14 @@ const WelcomeScreen: React.FC<{ onStart: () => void; userName: string | null }> 
           <p>⬆️⬇️⬅️➡️ / WASD → Move</p>
           <p>🔫 Spacebar → Shoot</p>
           <p>🖱️ Click → Shoot</p>
+          
         </div>
+        <button
+            className="corporate-button"
+            onClick={() => window.open("https://www.crystalthedeveloper.ca/", "_blank")}
+          >
+            🏢 Corporate Site
+          </button>
       </div>
     </div>
   );
