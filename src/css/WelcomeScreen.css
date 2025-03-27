@@ -62,7 +62,22 @@
     margin-top: 20px;
 }
 
-.play-button,
+.play-button {
+    background: rgba(30, 60, 30, 0.9);
+    border: 1px solid #555;
+    padding: 12px 20px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 8px;
+    color: #ddd;
+    transition: 0.3s;
+    box-shadow: 0 5px 15px rgba(255, 255, 255, 0.1);
+    width: 100%;
+    text-align: center;
+
+}
+
 .corporate-button {
     background: rgba(30, 30, 30, 0.7);
     border: 1px solid #555;
@@ -111,7 +126,6 @@
         background:
             image-set(url('/game-screenshot-mobile.webp') type('image/webp'),
                 url('/game-screenshot-mobile.jpg') type('image/jpeg')) center/cover no-repeat;
-        padding: 5px;
     }
 
     .welcome-box {
@@ -126,7 +140,7 @@
     }
 
     .button-container {
-        gap: 12px;
+        gap: 30px;
     }
 
     .play-button,
