@@ -164,10 +164,6 @@ function GameCanvas() {
     }
   };
 
-  const handleVisitPortfolio = () => {
-    window.location.href = "https://www.crystalthedeveloper.ca/";
-  };
-
   if (isGameOver) {
     return (
       <GameMenu
@@ -176,7 +172,9 @@ function GameCanvas() {
         onSave={handleSaveGame}
         isVisible={true}
         saving={saving}
-        onVisitPortfolio={handleVisitPortfolio}
+        onVisitPortfolio={() => {
+          window.open("https://www.crystalthedeveloper.ca", "_blank");
+        }}
       />
     );
   }

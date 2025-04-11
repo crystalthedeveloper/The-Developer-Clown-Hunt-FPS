@@ -40,7 +40,7 @@ const WelcomeScreen: React.FC<{ onStart: () => void; userName: string | null }> 
         </div>
         <button
             className="corporate-button"
-            onClick={() => window.open("https://www.crystalthedeveloper.ca/", "_blank")}
+            onClick={() => window.open("https://www.crystalthedeveloper.ca", "_blank")}
           >
             🏢 Corporate Site
           </button>

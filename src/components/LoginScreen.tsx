@@ -98,7 +98,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
         <div className="button-group">
           <button
             className="back-button"
-            onClick={() => (window.location.href = "https://www.crystalthedeveloper.ca/")}
+            onClick={() => (window.location.href = "https://www.crystalthedeveloper.ca")}
           >
             🔙 Back to Home
           </button>
